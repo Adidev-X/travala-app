@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Report – LA | KG | Melrose</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; padding: 24px; color: #222; }
+    h1 { text-align: center; font-size: 22px; color: #1a237e; margin-bottom: 6px; }
+    .subtitle { text-align: center; font-size: 13px; color: #666; margin-bottom: 24px; }
+
+    .month-block { margin-bottom: 32px; }
+    .month-title {
+      background: #1a237e; color: #fff; padding: 8px 16px;
+      font-size: 16px; font-weight: 700; border-radius: 6px 6px 0 0;
+    }
+
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    thead tr { background: #e8eaf6; }
+    thead th {
+      padding: 9px 12px; font-size: 12px; text-align: center;
+      font-weight: 700; color: #1a237e; border: 1px solid #c5cae9;
+    }
+    tbody td {
+      padding: 8px 12px; font-size: 12px; text-align: center;
+      border: 1px solid #e0e0e0;
+    }
+    .label-col { text-align: left; font-weight: 600; color: #333; width: 260px; }
+    .total-row td { background: #fff3e0; font-weight: 700; color: #e65100; }
+    .grand-total-row td { background: #e8f5e9; font-weight: 700; color: #2e7d32; font-size: 13px; }
+    .section-divider { background: #f5f5f5; }
+    .section-divider td { font-size: 11px; color: #888; font-style: italic; border: none; padding: 4px 12px; }
+
+    .summary-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px;
+    }
+    .summary-card {
+      background: #fff; border-radius: 8px; padding: 14px 16px;
+      border-left: 4px solid #1a237e; box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+    }
+    .summary-card.la { border-color: #1565c0; }
+    .summary-card.kg { border-color: #2e7d32; }
+    .summary-card.melrose { border-color: #6a1b9a; }
+    .summary-card.all { border-color: #e65100; }
+    .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #777; margin-bottom: 8px; }
+    .card-stat { font-size: 22px; font-weight: 800; color: #333; }
+    .card-sub { font-size: 11px; color: #888; margin-top: 3px; }
+
+    .note { font-size: 11px; color: #999; margin-top: 6px; padding: 6px 12px; }
+
+    @media print {
+      body { padding: 8px; background: #fff; }
+      .summary-grid { grid-template-columns: repeat(4,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<h1>📊 Sales Report — Lok Awas (LA) | Kings Gate (KG) | The Melrose</h1>
+<p class="subtitle">Period: January 2026 – April 2026 (upto 12 Apr) &nbsp;|&nbsp; Generated: 12 April 2026</p>
+
+<!-- ===== COMBINED SUMMARY CARDS ===== -->
+<div class="summary-grid">
+  <div class="summary-card la">
+    <div class="card-title">🏗 Lok Awas – Total Bookings</div>
+    <div class="card-stat">20</div>
+    <div class="card-sub">Jan:6 | Feb:3 | Mar:9 | Apr:2</div>
+  </div>
+  <div class="summary-card kg">
+    <div class="card-title">🏢 Kings Gate – Total Bookings</div>
+    <div class="card-stat">55</div>
+    <div class="card-sub">Jan:12 | Feb:8 | Mar:24 | Apr:23 (incl. multiple entries)</div>
+  </div>
+  <div class="summary-card melrose">
+    <div class="card-title">🏬 The Melrose – Total Bookings</div>
+    <div class="card-stat">5</div>
+    <div class="card-sub">Jan:1 | Feb:1 | Mar:2 | Apr:1</div>
+  </div>
+  <div class="summary-card all">
+    <div class="card-title">📦 Overall Total Bookings</div>
+    <div class="card-stat">80</div>
+    <div class="card-sub">Jan:19 | Feb:12 | Mar:35 | Apr:26 (till 12 Apr)</div>
+  </div>
+</div>
+
+<!-- ===== JANUARY ===== -->
+<div class="month-block">
+  <div class="month-title">JANUARY 2026 — 19 Bookings</div>
+  <table>
+    <thead>
+      <tr>
+        <th class="label-col">Metric</th>
+        <th>Lok Awas (LA)</th>
+        <th>Kings Gate (KG)</th>
+        <th>The Melrose</th>
+        <th>Month Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label-col">Total Sales (No. of Bookings)</td>
+        <td>6</td>
+        <td>12</td>
+        <td>1</td>
+        <td><strong>19</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Cancellations</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td><strong>0</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Sale Value — BSP (₹)</td>
+        <td>3,18,36,800</td>
+        <td>2,98,80,000</td>
+        <td>97,50,000</td>
+        <td><strong>7,14,66,800</strong></td>
+      </tr>
+      <tr class="section-divider"><td colspan="5">Collection details (based on % received × BSP; Token = ₹1,00,000)</td></tr>
+      <tr>
+        <td class="label-col">Total Collection Value (₹)</td>
+        <td>57,92,187</td>
+        <td>1,36,46,000</td>
+        <td>78,00,000</td>
+        <td><strong>2,72,38,187</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Bookings with Pending Collection</td>
+        <td>6</td>
+        <td>11</td>
+        <td>1</td>
+        <td><strong>18</strong></td>
+      </tr>
+      <tr class="total-row">
+        <td class="label-col">Total Pending Collection Value (₹)</td>
+        <td>2,60,44,613</td>
+        <td>1,62,34,000</td>
+        <td>19,50,000</td>
+        <td><strong>4,42,28,613</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">
+    LA Jan Details: Jaswinder Singh (25%), Gursev Singh (8%), Tanvir Kaur (25%), Kamlesh (24%), Kavita Chauhan (10%), Shivam Mahajan (20%)<br>
+    KG Jan Details: Asmita (40%), Rakesh Verma (60%), Ajmer Singh (60%), Malkeet Singh (40%), PArvinder Singh (40%), Palwinder Singh (40%), Ishani (60%), Balvinder Kaur (40%), Kalpna Verma (60%), Kamaljit Kaur (Token), Madan Gopal (100%✓), Puja Rani (Token)<br>
+    Melrose Jan: Baljinder Kaur (80%)
+  </p>
+</div>
+
+<!-- ===== FEBRUARY ===== -->
+<div class="month-block">
+  <div class="month-title">FEBRUARY 2026 — 12 Bookings</div>
+  <table>
+    <thead>
+      <tr>
+        <th class="label-col">Metric</th>
+        <th>Lok Awas (LA)</th>
+        <th>Kings Gate (KG)</th>
+        <th>The Melrose</th>
+        <th>Month Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label-col">Total Sales (No. of Bookings)</td>
+        <td>3</td>
+        <td>8</td>
+        <td>1</td>
+        <td><strong>12</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Cancellations</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td><strong>0</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Sale Value — BSP (₹)</td>
+        <td>1,65,95,700</td>
+        <td>1,93,40,000</td>
+        <td>94,50,000</td>
+        <td><strong>4,53,85,700</strong></td>
+      </tr>
+      <tr class="section-divider"><td colspan="5">Collection details</td></tr>
+      <tr>
+        <td class="label-col">Total Collection Value (₹)</td>
+        <td>29,06,525</td>
+        <td>70,86,625</td>
+        <td>58,59,000</td>
+        <td><strong>1,58,52,150</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Bookings with Pending Collection</td>
+        <td>3</td>
+        <td>8</td>
+        <td>1</td>
+        <td><strong>12</strong></td>
+      </tr>
+      <tr class="total-row">
+        <td class="label-col">Total Pending Collection Value (₹)</td>
+        <td>1,36,89,175</td>
+        <td>1,22,53,375</td>
+        <td>35,91,000</td>
+        <td><strong>2,95,33,550</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">
+    LA Feb Details: Kamaljeet (25%), Mohan Lal & Sanjay Garg (25%), Shashi Bala & Vandana Garg (Token)<br>
+    KG Feb Details: Ashwani Kumar Sood (40%), Arun Kumar (40%), Sunita Aggarwal (95%), Sheetal Kaur ×2 (Token), Deepali (40%), Smriti (40%), Harshita (28%)<br>
+    Melrose Feb: Harmeet Singh (62%)
+  </p>
+</div>
+
+<!-- ===== MARCH ===== -->
+<div class="month-block">
+  <div class="month-title">MARCH 2026 — 35 Bookings</div>
+  <table>
+    <thead>
+      <tr>
+        <th class="label-col">Metric</th>
+        <th>Lok Awas (LA)</th>
+        <th>Kings Gate (KG)</th>
+        <th>The Melrose</th>
+        <th>Month Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label-col">Total Sales (No. of Bookings)</td>
+        <td>9</td>
+        <td>24</td>
+        <td>2</td>
+        <td><strong>35</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Cancellations</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td><strong>0</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Sale Value — BSP (₹)</td>
+        <td>5,50,86,000</td>
+        <td>6,05,60,000</td>
+        <td>1,83,00,000</td>
+        <td><strong>13,39,46,000</strong></td>
+      </tr>
+      <tr class="section-divider"><td colspan="5">Collection details</td></tr>
+      <tr>
+        <td class="label-col">Total Collection Value (₹)</td>
+        <td>1,07,42,875</td>
+        <td>92,50,000</td>
+        <td>49,00,000</td>
+        <td><strong>2,48,92,875</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Bookings with Pending Collection</td>
+        <td>8</td>
+        <td>24</td>
+        <td>2</td>
+        <td><strong>34</strong></td>
+      </tr>
+      <tr class="total-row">
+        <td class="label-col">Total Pending Collection Value (₹)</td>
+        <td>4,43,43,125</td>
+        <td>5,13,10,000</td>
+        <td>1,34,00,000</td>
+        <td><strong>10,90,53,125</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">
+    LA Mar Details: Mandeep Singh ×2 (25%/Token), Neelam Rawat (Token), Satish Chander (10%), Reeta Devi (12%), Harbans Singh (100%✓), Ashwani Kumar Dogra (10%), Jasvinder Singh Jolly (Token), Sheen Luthra (Token)<br>
+    KG Mar Details: Apurav Pal (40%), Yatharth Misra (Token), Sudha Dhamija (60%), Anuj Sadhotra (40%), Lalita Arora (Token), Baljeet Kaur (40%), Kumari Sonu (Token), Aamir Iqbal (Token), Ranjit Singh (Token), Vipan Kumar (Token), Anita Bains (40%), Joginder Kumar (Token), Sargun Singh ×2 (Token), Kuldeep Kaur (40%), Jasleen Kaur (40%), Jasvinder Jolly ×3 (Token), Sukhjit Kaur (Token), Jyoti Sharma (Token), Rajeev Misra (Token), Vidyavati Sharma (Token), Ankit Kumar (Token)<br>
+    Melrose Mar: Seema Rani (50%), Rajwant Kaur (Token)
+  </p>
+</div>
+
+<!-- ===== APRIL ===== -->
+<div class="month-block">
+  <div class="month-title">APRIL 2026 — 26 Bookings (till 12 Apr)</div>
+  <table>
+    <thead>
+      <tr>
+        <th class="label-col">Metric</th>
+        <th>Lok Awas (LA)</th>
+        <th>Kings Gate (KG)</th>
+        <th>The Melrose</th>
+        <th>Month Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label-col">Total Sales (No. of Bookings)</td>
+        <td>2</td>
+        <td>23</td>
+        <td>1</td>
+        <td><strong>26</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Cancellations</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td><strong>0</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Sale Value — BSP (₹)</td>
+        <td>1,22,53,500</td>
+        <td>5,73,80,000</td>
+        <td>1,02,95,000</td>
+        <td><strong>7,99,28,500</strong></td>
+      </tr>
+      <tr class="section-divider"><td colspan="5">Collection details</td></tr>
+      <tr>
+        <td class="label-col">Total Collection Value (₹)</td>
+        <td>16,13,125</td>
+        <td>23,00,000</td>
+        <td>25,73,750</td>
+        <td><strong>64,86,875</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Bookings with Pending Collection</td>
+        <td>2</td>
+        <td>23</td>
+        <td>1</td>
+        <td><strong>26</strong></td>
+      </tr>
+      <tr class="total-row">
+        <td class="label-col">Total Pending Collection Value (₹)</td>
+        <td>1,06,40,375</td>
+        <td>5,50,80,000</td>
+        <td>77,21,250</td>
+        <td><strong>7,34,41,625</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">
+    LA Apr Details: Dr. Anil Kumar Sood (Token), Dr. Jaspreet Kaur (25%)<br>
+    KG Apr Details: All 23 bookings — Token (₹1L each): Parveen Kumar ×2, Ravi Chauhan, Keshav ×2, Subham, Harish, Nirmal, Pankaj, Gurdev, Harpreet Singh, Reetika, Punam ×2, Gurwinder, Amarjit Sandhu ×3, Firoz Khan, Pooja, Jatin, Reeta Devi, Lakhvinder<br>
+    Melrose Apr: Kiran Bala (25%)
+  </p>
+</div>
+
+<!-- ===== GRAND SUMMARY ===== -->
+<div class="month-block">
+  <div class="month-title" style="background:#2e7d32;">📋 GRAND SUMMARY — Jan to Apr 2026</div>
+  <table>
+    <thead>
+      <tr>
+        <th class="label-col">Metric</th>
+        <th>Lok Awas (LA)</th>
+        <th>Kings Gate (KG)</th>
+        <th>The Melrose</th>
+        <th>GRAND TOTAL</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="grand-total-row">
+        <td class="label-col">Total Sales (Bookings)</td>
+        <td>20</td>
+        <td>67</td>
+        <td>5</td>
+        <td>92 entries (80 unique)</td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Cancellations</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+      </tr>
+      <tr class="grand-total-row">
+        <td class="label-col">Total Sale Value — BSP (₹)</td>
+        <td>11,57,72,000</td>
+        <td>16,71,60,000</td>
+        <td>3,77,95,000</td>
+        <td><strong>31,07,27,000</strong></td>
+      </tr>
+      <tr class="grand-total-row">
+        <td class="label-col">Total Collection Value (₹)</td>
+        <td>2,11,54,712</td>
+        <td>3,22,82,625</td>
+        <td>2,11,32,750</td>
+        <td><strong>7,45,70,087</strong></td>
+      </tr>
+      <tr class="grand-total-row">
+        <td class="label-col">Bookings with Pending</td>
+        <td>19</td>
+        <td>66</td>
+        <td>5</td>
+        <td><strong>90</strong></td>
+      </tr>
+      <tr class="grand-total-row" style="background:#fce4ec!important;">
+        <td class="label-col" style="color:#c62828;">Total Pending Collection Value (₹)</td>
+        <td style="color:#c62828;">9,46,17,288</td>
+        <td style="color:#c62828;">13,48,77,375</td>
+        <td style="color:#c62828;">1,66,62,250</td>
+        <td style="color:#c62828;"><strong>24,61,56,913</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== MONTH-WISE COMPARISON TABLE ===== -->
+<div class="month-block">
+  <div class="month-title" style="background:#4a148c;">📊 Month-wise Comparison</div>
+  <table>
+    <thead>
+      <tr>
+        <th class="label-col">Metric</th>
+        <th>Jan 2026</th>
+        <th>Feb 2026</th>
+        <th>Mar 2026</th>
+        <th>Apr 2026 (till 12)</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label-col">Total Sales</td>
+        <td>19</td>
+        <td>12</td>
+        <td>35</td>
+        <td>26</td>
+        <td><strong>92</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Cancellations</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+        <td><strong>0</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total BSP Value (₹ Cr)</td>
+        <td>7.15 Cr</td>
+        <td>4.54 Cr</td>
+        <td>13.40 Cr</td>
+        <td>7.99 Cr</td>
+        <td><strong>33.08 Cr</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Total Collection (₹ Cr)</td>
+        <td>2.72 Cr</td>
+        <td>1.59 Cr</td>
+        <td>2.49 Cr</td>
+        <td>0.65 Cr</td>
+        <td><strong>7.45 Cr</strong></td>
+      </tr>
+      <tr>
+        <td class="label-col">Bookings with Pending</td>
+        <td>18</td>
+        <td>12</td>
+        <td>34</td>
+        <td>26</td>
+        <td><strong>90</strong></td>
+      </tr>
+      <tr class="total-row">
+        <td class="label-col">Total Pending (₹ Cr)</td>
+        <td>4.42 Cr</td>
+        <td>2.95 Cr</td>
+        <td>10.91 Cr</td>
+        <td>7.34 Cr</td>
+        <td><strong>25.62 Cr</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">
+    ⚠️ Notes:<br>
+    • "Token" bookings = ₹1,00,000 received at time of booking. BSP balance remains pending.<br>
+    • Collection % = % Received × BSP/SQFT (discounted price, not Print Price).<br>
+    • March shows highest bookings (35) and highest total BSP value (₹13.40 Cr).<br>
+    • Kings Gate dominates volume; Melrose has highest per-unit BSP.<br>
+    • No cancellations recorded in any month.<br>
+    • Duplicate entries (Sheetal ×2, Jasvinder Jolly ×3, Parveen ×2 etc.) counted as separate rows per data provided.
+  </p>
+</div>
+
+</body>
+</html>

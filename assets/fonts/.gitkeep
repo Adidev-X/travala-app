@@ -1,0 +1,7 @@
+# Place custom .ttf / .otf font files here.
+# After adding fonts, register them in app.json under "expo.fonts"
+# or load dynamically with expo-font's useFonts() hook.
+#
+# Example:
+#   assets/fonts/Poppins-Regular.ttf
+#   assets/fonts/Poppins-Bold.ttf

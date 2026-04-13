@@ -1,0 +1,3 @@
+# Place SVG or PNG icon assets here.
+# Recommended: use @expo/vector-icons (already installed) for standard icons.
+# For custom app icons, place PNGs here and import via require().
