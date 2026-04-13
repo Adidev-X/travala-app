@@ -1,15 +1,18 @@
-import colors from '@/constants/colors';
-import spacing from '@/constants/spacing';
-import { fontSize, fontWeight } from '@/constants/typography';
+/**
+ * OTPScreen — redesigned 2025. WHITE theme.
+ * Modern 6-box OTP, animated focus/filled/error states, shake on wrong OTP.
+ */
+import AppButton from '@/components/AppButton';
+import { COLORS } from '@/constants/colors';
+import { SHADOWS } from '@/constants/shadows';
 import { useOTPTimer } from '@/hooks/useOTPTimer';
 import type { OTPParams, ProfileSetupParams } from '@/navigation/types';
 import { authService } from '@/services/auth';
 import { useAuthStore } from '@/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   KeyboardAvoidingView,
   Platform,
@@ -22,24 +25,98 @@ import {
 
 const OTP_LENGTH = 6;
 
-export default function OTPScreen() {
-  const router = useRouter();
+// ── OTP Box sub-component ──────────────────────────────────────────────────
+interface OTPBoxProps {
+  digit:   string;
+  focused: boolean;
+  error:   boolean;
+  index:   number;
+  inputRef: (ref: TextInput | null) => void;
+  onChangeText: (text: string, index: number) => void;
+  onKeyPress:   (key: string,  index: number) => void;
+}
+
+const OTPBox = React.memo(function OTPBox({
+  digit, focused, error, index, inputRef, onChangeText, onKeyPress,
+}: OTPBoxProps) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (focused) {
+      Animated.spring(scaleAnim, { toValue: 1.05, useNativeDriver: true, tension: 200, friction: 10 }).start();
+    } else {
+      Animated.spring(scaleAnim, { toValue: 1,    useNativeDriver: true, tension: 200, friction: 10 }).start();
+    }
+  }, [focused, scaleAnim]);
+
+  const boxStyle = error
+    ? styles.boxError
+    : digit
+    ? styles.boxFilled
+    : focused
+    ? styles.boxFocused
+    : null;
+
+  const textStyle = error
+    ? styles.boxTextError
+    : digit
+    ? styles.boxTextFilled
+    : styles.boxText;
+
+  return (
+    <Animated.View style={[styles.boxWrap, { transform: [{ scale: scaleAnim }] }]}>
+      <TextInput
+        ref={inputRef}
+        style={[styles.box, boxStyle]}
+        value={digit}
+        onChangeText={t => onChangeText(t, index)}
+        onKeyPress={({ nativeEvent }) => onKeyPress(nativeEvent.key, index)}
+        keyboardType="number-pad"
+        maxLength={1}
+        textAlign="center"
+        selectTextOnFocus
+        autoFocus={index === 0}
+        caretHidden
+      />
+      {digit ? <Text style={textStyle}>{digit}</Text> : null}
+    </Animated.View>
+  );
+});
+
+// ── Main screen ───────────────────────────────────────────────────────────
+const OTPScreen = React.memo(function OTPScreen() {
+  const router    = useRouter();
   const { phone } = useLocalSearchParams<OTPParams>();
-  const setUser = useAuthStore(s => s.setUser);
+  const setUser   = useAuthStore(s => s.setUser);
   const setTokens = useAuthStore(s => s.setTokens);
 
-  const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const shakeAnim = useRef(new Animated.Value(0)).current;
-  const inputRefs = useRef<(TextInput | null)[]>(Array(OTP_LENGTH).fill(null));
+  const [digits,       setDigits]       = useState<string[]>(Array(OTP_LENGTH).fill(''));
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState('');
+  const shakeAnim  = useRef(new Animated.Value(0)).current;
+  const inputRefs  = useRef<(TextInput | null)[]>(Array(OTP_LENGTH).fill(null));
+  const pulseAnim  = useRef(new Animated.Value(1)).current;
 
-  const { timeLeft, isExpired, restart } = useOTPTimer(60);
+  const { timeLeft, isExpired, restart } = useOTPTimer(45);
 
-  const otp = digits.join('');
-  const isComplete = otp.length === OTP_LENGTH;
+  const otp        = digits.join('');
+  const isComplete = otp.length === OTP_LENGTH && !digits.includes('');
 
-  // ── Shake animation ───────────────────────────────────────────────────────
+  // Pulse when complete
+  useEffect(() => {
+    if (isComplete) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.02, duration: 600, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1,    duration: 600, useNativeDriver: true }),
+        ]),
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isComplete, pulseAnim]);
+
   const triggerShake = useCallback(() => {
     Animated.sequence([
       Animated.timing(shakeAnim, { toValue: 10,  duration: 60, useNativeDriver: true }),
@@ -50,15 +127,15 @@ export default function OTPScreen() {
     ]).start();
   }, [shakeAnim]);
 
-  // ── Digit input handling ──────────────────────────────────────────────────
   const handleDigitChange = useCallback((text: string, index: number) => {
-    const digit = text.replace(/\D/g, '').slice(-1);
+    const digit = text.replace(/D/g, '').slice(-1);
     setError('');
     const updated = [...digits];
     updated[index] = digit;
     setDigits(updated);
     if (digit && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
+      setFocusedIndex(index + 1);
     }
   }, [digits]);
 
@@ -68,10 +145,10 @@ export default function OTPScreen() {
       updated[index - 1] = '';
       setDigits(updated);
       inputRefs.current[index - 1]?.focus();
+      setFocusedIndex(index - 1);
     }
   }, [digits]);
 
-  // ── Verify ────────────────────────────────────────────────────────────────
   const handleVerify = useCallback(async () => {
     if (!isComplete) return;
     setError('');
@@ -84,19 +161,17 @@ export default function OTPScreen() {
         router.replace({ pathname: '/(auth)/profile-setup', params });
       } else {
         setUser(result.data.user);
-        // Auth guard in _layout.tsx handles redirect to tabs
       }
     } catch {
       setError('Invalid or expired OTP. Please try again.');
       triggerShake();
       setDigits(Array(OTP_LENGTH).fill(''));
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+      setTimeout(() => { inputRefs.current[0]?.focus(); setFocusedIndex(0); }, 100);
     } finally {
       setLoading(false);
     }
   }, [otp, isComplete, phone, router, setTokens, setUser, triggerShake]);
 
-  // ── Resend ────────────────────────────────────────────────────────────────
   const handleResend = useCallback(async () => {
     if (!isExpired) return;
     try {
@@ -104,118 +179,158 @@ export default function OTPScreen() {
       restart();
       setDigits(Array(OTP_LENGTH).fill(''));
       setError('');
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+      setTimeout(() => { inputRefs.current[0]?.focus(); setFocusedIndex(0); }, 100);
     } catch {
       setError('Failed to resend OTP. Please try again.');
     }
   }, [isExpired, phone, restart]);
 
+  const fmtTime = (s: number) => `0:${String(s).padStart(2, '0')}`;
+
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.content}>
 
-        {/* Header */}
-        <Text style={styles.heading}>Verify your number</Text>
-        <View style={styles.subRow}>
-          <Text style={styles.subText}>OTP sent to </Text>
-          <Text style={styles.phone}>+91 {phone}</Text>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="pencil" size={14} color={colors.secondary} style={styles.editIcon} />
-          </TouchableOpacity>
+        {/* ── Header ──────────────────────────────────────── */}
+        <View style={styles.iconWrap}>
+          <Ionicons name="mail-outline" size={44} color={COLORS.primary} />
         </View>
+        <Text style={styles.heading}>Verify Your Number</Text>
+        <TouchableOpacity
+          style={styles.subRow}
+          onPress={() => router.back()}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Text style={styles.subText}>{'OTP sent to +91 '}</Text>
+          <Text style={styles.phoneText}>{phone}</Text>
+          <Ionicons name="pencil" size={13} color={COLORS.slate400} style={styles.editIcon} />
+        </TouchableOpacity>
 
-        {/* 6-box OTP input */}
-        <Animated.View style={[styles.boxRow, { transform: [{ translateX: shakeAnim }] }]}>
+        {/* ── OTP boxes ───────────────────────────────────── */}
+        <Animated.View
+          style={[styles.boxRow, { transform: [{ translateX: shakeAnim }] }]}>
           {Array.from({ length: OTP_LENGTH }).map((_, i) => (
-            <TextInput
+            <OTPBox
               key={i}
-              ref={ref => { inputRefs.current[i] = ref; }}
-              style={[styles.box, digits[i] ? styles.boxFilled : null, !!error && styles.boxError]}
-              value={digits[i]}
-              onChangeText={text => handleDigitChange(text, i)}
-              onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, i)}
-              keyboardType="number-pad"
-              maxLength={1}
-              textAlign="center"
-              selectTextOnFocus
-              autoFocus={i === 0}
+              digit={digits[i]}
+              focused={focusedIndex === i}
+              error={error !== '' && digits[i] !== ''}
+              index={i}
+              inputRef={ref => { inputRefs.current[i] = ref; }}
+              onChangeText={handleDigitChange}
+              onKeyPress={handleKeyPress}
             />
           ))}
         </Animated.View>
 
-        {/* Error */}
-        {!!error && (
+        {/* ── Error ───────────────────────────────────────── */}
+        {error ? (
           <View style={styles.errorRow}>
-            <Ionicons name="alert-circle-outline" size={14} color={colors.danger} />
+            <Ionicons name="alert-circle-outline" size={14} color={COLORS.danger} />
             <Text style={styles.errorText}>{error}</Text>
           </View>
-        )}
+        ) : null}
 
-        {/* Verify button */}
+        {/* ── Verify button ────────────────────────────────── */}
+        <Animated.View style={{ transform: [{ scale: pulseAnim }], width: '100%' }}>
+          <AppButton
+            label="Verify OTP"
+            variant="primary"
+            fullWidth
+            loading={loading}
+            disabled={!isComplete || loading}
+            onPress={handleVerify}
+            style={styles.verifyBtn}
+          />
+        </Animated.View>
+
+        {/* ── Resend ──────────────────────────────────────── */}
         <TouchableOpacity
-          style={[styles.button, (!isComplete || loading) && styles.buttonDisabled]}
-          onPress={handleVerify}
-          disabled={!isComplete || loading}
-          activeOpacity={0.85}>
-          {loading
-            ? <ActivityIndicator color={colors.white} />
-            : <Text style={styles.buttonText}>Verify OTP</Text>}
+          style={styles.resendRow}
+          onPress={handleResend}
+          disabled={!isExpired}>
+          {isExpired ? (
+            <Text style={styles.resendActive}>Resend OTP</Text>
+          ) : (
+            <Text style={styles.resendTimer}>
+              {'Resend OTP in '}
+              <Text style={styles.resendCountdown}>{fmtTime(timeLeft)}</Text>
+            </Text>
+          )}
         </TouchableOpacity>
 
-        {/* Resend */}
-        <TouchableOpacity onPress={handleResend} disabled={!isExpired} style={styles.resendRow}>
-          <Text style={[styles.resendText, !isExpired && styles.resendDisabled]}>
-            {isExpired
-              ? 'Resend OTP'
-              : `Resend OTP in ${timeLeft}s`}
+        {/* ── Bottom hint ─────────────────────────────────── */}
+        <View style={styles.hintRow}>
+          <Ionicons name="information-circle-outline" size={13} color={COLORS.slate400} />
+          <Text style={styles.hintText}>
+            {'Check SMS or WhatsApp for OTP'}
           </Text>
-        </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
-}
+});
 
-const BOX_SIZE = 48;
+export default OTPScreen;
+
+const BOX = 48;
+const BOX_H = 58;
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: colors.background },
-  content:        { flex: 1, paddingHorizontal: spacing.lg, paddingTop: spacing.xxl, alignItems: 'center' },
-  heading:        { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.text.primary, marginBottom: spacing.sm },
-  subRow:         { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xl },
-  subText:        { fontSize: fontSize.md, color: colors.text.secondary },
-  phone:          { fontSize: fontSize.md, fontWeight: fontWeight.semiBold, color: colors.primary },
-  editIcon:       { marginLeft: spacing.xs },
-  boxRow:         { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+  root:    { flex: 1, backgroundColor: COLORS.background },
+  content: { flex: 1, paddingHorizontal: 24, paddingTop: 52, alignItems: 'center' },
+
+  // Header
+  iconWrap: {
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: COLORS.primaryBg,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 20,
+    ...SHADOWS.sm,
+  },
+  heading:  { fontSize: 26, fontWeight: '800', color: COLORS.slate900, marginBottom: 10, letterSpacing: -0.3 },
+  subRow:   { flexDirection: 'row', alignItems: 'center', marginBottom: 36 },
+  subText:  { fontSize: 14, color: COLORS.slate400 },
+  phoneText:{ fontSize: 14, fontWeight: '700', color: COLORS.slate700 },
+  editIcon: { marginLeft: 6 },
+
+  // OTP Boxes
+  boxRow:   { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  boxWrap:  { position: 'relative', width: BOX, height: BOX_H },
   box: {
-    width: BOX_SIZE,
-    height: BOX_SIZE + 8,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 10,
-    fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
-    color: colors.text.primary,
-    backgroundColor: colors.card,
+    position: 'absolute',
+    width: BOX, height: BOX_H,
+    borderWidth: 2, borderColor: COLORS.slate200,
+    borderRadius: 14,
+    backgroundColor: COLORS.white,
+    fontSize: BOX_H * 0.4,
+    fontWeight: '700',
+    color: 'transparent', // hide native caret text, use overlay Text
+    textAlign: 'center',
+    ...SHADOWS.xs,
   },
-  boxFilled:      { borderColor: colors.primary, backgroundColor: `${colors.primary}0D` },
-  boxError:       { borderColor: colors.danger, backgroundColor: `${colors.danger}0D` },
-  errorRow:       { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: spacing.sm },
-  errorText:      { color: colors.danger, fontSize: fontSize.xs },
-  button: {
-    width: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.md,
-    height: 52,
-  },
-  buttonDisabled: { opacity: 0.45 },
-  buttonText:     { color: colors.white, fontSize: fontSize.lg, fontWeight: fontWeight.semiBold },
-  resendRow:      { marginTop: spacing.lg },
-  resendText:     { fontSize: fontSize.sm, color: colors.secondary, fontWeight: fontWeight.medium },
-  resendDisabled: { color: colors.text.hint },
+  boxFocused: { borderColor: COLORS.primary,  backgroundColor: COLORS.primaryBg },
+  boxFilled:  { borderColor: COLORS.success,   backgroundColor: COLORS.successLight },
+  boxError:   { borderColor: COLORS.danger,    backgroundColor: COLORS.dangerLight },
+  boxText:       { position: 'absolute', width: BOX, height: BOX_H, textAlign: 'center', lineHeight: BOX_H, fontSize: BOX_H * 0.42, fontWeight: '700', color: COLORS.slate900 },
+  boxTextFilled: { position: 'absolute', width: BOX, height: BOX_H, textAlign: 'center', lineHeight: BOX_H, fontSize: BOX_H * 0.42, fontWeight: '700', color: COLORS.successDark },
+  boxTextError:  { position: 'absolute', width: BOX, height: BOX_H, textAlign: 'center', lineHeight: BOX_H, fontSize: BOX_H * 0.42, fontWeight: '700', color: COLORS.dangerDark },
+
+  // Error
+  errorRow:  { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 12 },
+  errorText: { fontSize: 13, color: COLORS.danger },
+
+  // Button
+  verifyBtn: { height: 52 },
+
+  // Resend
+  resendRow:       { marginTop: 20 },
+  resendActive:    { fontSize: 14, color: COLORS.primary, fontWeight: '600', textDecorationLine: 'underline' },
+  resendTimer:     { fontSize: 14, color: COLORS.slate400 },
+  resendCountdown: { fontWeight: '700', color: COLORS.slate700 },
+
+  // Hint
+  hintRow:  { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 28, opacity: 0.7 },
+  hintText: { fontSize: 12, color: COLORS.slate400 },
 });

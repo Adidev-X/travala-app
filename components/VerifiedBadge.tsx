@@ -1,53 +1,88 @@
-import colors from '@/constants/colors';
-import spacing from '@/constants/spacing';
-import { fontSize, fontWeight } from '@/constants/typography';
-import { Ionicons } from '@expo/vector-icons';
-import React, { memo } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { COLORS } from '../constants/colors';
+import { RADIUS } from '../constants/spacing';
+import { FONTS } from '../constants/typography';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type VerifiedBadgeType = 'rc' | 'dl' | 'permit' | 'full';
-export type VerifiedBadgeSize = 'sm' | 'md';
 
 export interface VerifiedBadgeProps {
   type: VerifiedBadgeType;
-  size?: VerifiedBadgeSize;
 }
 
-const LABELS: Record<VerifiedBadgeType, string> = {
-  rc:     'RC Verified',
-  dl:     'DL Verified',
-  permit: 'Permit',
-  full:   'Fully Verified',
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+type BadgeConfig = {
+  label: string;
+  icon: string;
+  bg: string;
+  text: string;
 };
 
-const ICON_SIZE: Record<VerifiedBadgeSize, number> = { sm: 10, md: 13 };
-const TEXT_SIZE: Record<VerifiedBadgeSize, number> = { sm: fontSize.xs - 1, md: fontSize.xs };
+const BADGE_MAP: Record<VerifiedBadgeType, BadgeConfig> = {
+  rc: {
+    label: 'RC',
+    icon: '✓',
+    bg: COLORS.successLight,
+    text: COLORS.successDark,
+  },
+  dl: {
+    label: 'DL',
+    icon: '✓',
+    bg: COLORS.successLight,
+    text: COLORS.successDark,
+  },
+  permit: {
+    label: 'Permit',
+    icon: '✓',
+    bg: COLORS.primaryBg,
+    text: '#1E40AF',
+  },
+  full: {
+    label: 'Verified',
+    icon: '★',
+    bg: COLORS.accentLight,
+    text: '#92400E',
+  },
+};
 
-const VerifiedBadge = memo(function VerifiedBadge({ type, size = 'md' }: VerifiedBadgeProps) {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+const VerifiedBadge = React.memo<VerifiedBadgeProps>(({ type }) => {
+  const config = BADGE_MAP[type];
+
   return (
-    <View style={[styles.pill, size === 'sm' && styles.pillSm]}>
-      <Ionicons name="checkmark-circle" size={ICON_SIZE[size]} color={colors.success} />
-      <Text style={[styles.label, { fontSize: TEXT_SIZE[size] }]}>{LABELS[type]}</Text>
+    <View style={[styles.container, { backgroundColor: config.bg }]}>
+      <Text style={[styles.icon, { color: config.text }]}>{config.icon}</Text>
+      <Text style={[styles.label, { color: config.text }]}>{config.label}</Text>
     </View>
   );
 });
 
+VerifiedBadge.displayName = 'VerifiedBadge';
+
 export default VerifiedBadge;
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  pill: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs - 1,
-    backgroundColor: `${colors.success}18`,
-    borderRadius: 20,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs - 1,
     alignSelf: 'flex-start',
+    borderRadius: RADIUS.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    gap: 4,
   },
-  pillSm: { paddingHorizontal: spacing.xs + 2 },
+  icon: {
+    fontSize: FONTS.sizes.xs,
+    fontWeight: FONTS.weights.bold,
+  },
   label: {
-    color: colors.success,
-    fontWeight: fontWeight.semiBold,
+    fontSize: FONTS.sizes.xs,
+    fontWeight: FONTS.weights.semibold,
   },
 });

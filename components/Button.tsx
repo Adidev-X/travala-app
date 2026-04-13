@@ -27,7 +27,7 @@ export interface AppButtonProps {
 const VARIANT_STYLES = {
   primary:   { bg: colors.primary,    border: colors.primary,    text: colors.white },
   secondary: { bg: colors.secondary,  border: colors.secondary,  text: colors.white },
-  outline:   { bg: colors.transparent, border: colors.primary,   text: colors.primary },
+  outline:   { bg: 'transparent',    border: colors.primary,   text: colors.primary },
   danger:    { bg: colors.danger,     border: colors.danger,     text: colors.white },
 };
 

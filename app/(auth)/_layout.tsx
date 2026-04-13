@@ -12,9 +12,10 @@ export default function AuthLayout() {
         headerShadowVisible: false,
         contentStyle: { backgroundColor: colors.background },
       }}>
-      <Stack.Screen name="enter-phone" options={{ headerShown: false }} />
-      <Stack.Screen name="otp" options={{ title: 'Verify OTP' }} />
-      <Stack.Screen name="profile-setup" options={{ title: 'Complete Profile' }} />
+      <Stack.Screen name="splash"        options={{ headerShown: false }} />
+      <Stack.Screen name="enter-phone"    options={{ headerShown: false }} />
+      <Stack.Screen name="otp"            options={{ headerShown: false }} />
+      <Stack.Screen name="profile-setup" options={{ headerShown: false }} />
     </Stack>
   );
 }

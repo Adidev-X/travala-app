@@ -608,7 +608,7 @@ const ss = StyleSheet.create({
     gap: spacing.md,
   },
   ratingBig: {
-    fontSize: fontSize.xxxl,
+    fontSize: fontSize.xxl,
     fontWeight: fontWeight.extraBold,
     color: colors.text.primary,
   },

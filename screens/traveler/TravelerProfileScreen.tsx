@@ -1,11 +1,11 @@
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
-import type { User } from '../../types';
-import useFetch from '../../hooks/useFetch';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import colors from '../../constants/colors';
 import spacing from '../../constants/spacing';
 import { fontSize, fontWeight } from '../../constants/typography';
+import useFetch from '../../hooks/useFetch';
+import type { User } from '../../types';
 
 export default function TravelerProfileScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  avatarInitial: { color: colors.white, fontSize: fontSize.xxxl, fontWeight: fontWeight.bold },
+  avatarInitial: { color: colors.white, fontSize: fontSize.xxl, fontWeight: fontWeight.bold },
   name: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.text.primary },
   city: { fontSize: fontSize.md, color: colors.text.secondary, marginTop: spacing.xs },
   bio: {

@@ -1,16 +1,20 @@
-import colors from '@/constants/colors';
-import spacing from '@/constants/spacing';
-import { fontSize, fontWeight } from '@/constants/typography';
+/**
+ * EnterPhoneScreen — redesigned 2025. WHITE theme.
+ */
+import AppButton from '@/components/AppButton';
+import AppCard from '@/components/AppCard';
+import { COLORS } from '@/constants/colors';
+import { SHADOWS } from '@/constants/shadows';
 import type { OTPParams } from '@/navigation/types';
 import { authService } from '@/services/auth';
 import { normalisePhone, validatePhone } from '@/utils/validatePhone';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -18,8 +22,9 @@ import {
   View,
 } from 'react-native';
 
-export default function EnterPhoneScreen() {
+const EnterPhoneScreen = React.memo(function EnterPhoneScreen() {
   const router = useRouter();
+  const inputRef = useRef<TextInput>(null);
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -46,158 +51,150 @@ export default function EnterPhoneScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
 
-      {/* Brand header */}
-      <View style={styles.header}>
-        <View style={styles.logoWrap}>
-          <Ionicons name="car" size={40} color={colors.white} />
-        </View>
-        <Text style={styles.appName}>Welcome to RideShare</Text>
-        <Text style={styles.tagline}>Enter your mobile number to continue</Text>
-      </View>
-
-      {/* Form */}
-      <View style={styles.form}>
-        <Text style={styles.label}>Mobile Number</Text>
-        <View style={[styles.phoneRow, !!error && styles.phoneRowError]}>
-          <View style={styles.prefix}>
-            <Text style={styles.prefixText}>🇮🇳 +91</Text>
+        {/* ── Illustration area ───────────────────────────────── */}
+        <View style={styles.heroArea}>
+          <View style={styles.illustCircle}>
+            <Ionicons name="phone-portrait-outline" size={48} color={COLORS.primary} />
           </View>
-          <TextInput
-            style={styles.input}
-            placeholder="9876543210"
-            placeholderTextColor={colors.text.hint}
-            keyboardType="phone-pad"
-            maxLength={10}
-            value={phone}
-            onChangeText={t => { setError(''); setPhone(t.replace(/\D/g, '')); }}
-            returnKeyType="done"
-            onSubmitEditing={handleSendOTP}
+          <Text style={styles.heading}>Welcome to RideShare</Text>
+          <Text style={styles.subtext}>
+            {'Find rides, share trips \u2014 connect with\ntravelers across India'}
+          </Text>
+        </View>
+
+        {/* ── Input card ──────────────────────────────────────── */}
+        <AppCard variant="elevated" style={styles.card}>
+          <Text style={styles.cardLabel}>ENTER YOUR MOBILE NUMBER</Text>
+
+          <TouchableOpacity
+            style={[styles.phoneRow, error ? styles.phoneRowError : null]}
+            activeOpacity={0.85}
+            onPress={() => inputRef.current?.focus()}>
+            <View style={styles.prefixBox}>
+              <Text style={styles.prefixFlag}>🇮🇳</Text>
+              <Text style={styles.prefixCode}>+91</Text>
+            </View>
+            <View style={styles.vertDivider} />
+            <TextInput
+              ref={inputRef}
+              style={styles.numberInput}
+              placeholder="98765 43210"
+              placeholderTextColor={COLORS.slate300}
+              keyboardType="phone-pad"
+              maxLength={10}
+              value={phone}
+              onChangeText={t => {
+                setError('');
+                setPhone(t.replace(/D/g, ''));
+              }}
+              returnKeyType="done"
+              onSubmitEditing={handleSendOTP}
+            />
+            {phone.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearBtn}
+                onPress={() => { setPhone(''); setError(''); inputRef.current?.focus(); }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Ionicons name="close-circle" size={18} color={COLORS.slate300} />
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+
+          {error ? (
+            <View style={styles.errorRow}>
+              <Ionicons name="alert-circle-outline" size={13} color={COLORS.danger} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.divider} />
+          <Text style={styles.otpHint}>
+            {"We'll send a 6-digit OTP to verify your number"}
+          </Text>
+        </AppCard>
+
+        {/* ── Send OTP button ─────────────────────────────────── */}
+        <View style={styles.btnWrap}>
+          <AppButton
+            label="Send OTP  →"
+            variant="primary"
+            fullWidth
+            loading={loading}
+            disabled={!isValid || loading}
+            onPress={handleSendOTP}
+            style={styles.sendBtn}
           />
         </View>
 
-        {!!error && (
-          <View style={styles.errorRow}>
-            <Ionicons name="alert-circle-outline" size={14} color={colors.danger} />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
+        {/* ── Trust row ───────────────────────────────────────── */}
+        <View style={styles.trustRow}>
+          <Ionicons name="shield-checkmark-outline" size={13} color={COLORS.success} />
+          <Text style={styles.trustText}>Secure</Text>
+          <View style={styles.trustDot} />
+          <Ionicons name="lock-closed-outline" size={13} color={COLORS.slate400} />
+          <Text style={styles.trustText}>Private</Text>
+          <View style={styles.trustDot} />
+          <Ionicons name="flash-outline" size={13} color={COLORS.accent} />
+          <Text style={styles.trustText}>Instant OTP</Text>
+        </View>
 
-        <TouchableOpacity
-          style={[
-            styles.button,
-            (!isValid || loading) && styles.buttonDisabled,
-          ]}
-          onPress={handleSendOTP}
-          disabled={!isValid || loading}
-          activeOpacity={0.85}>
-          {loading
-            ? <ActivityIndicator color={colors.white} />
-            : <Text style={styles.buttonText}>Send OTP</Text>}
-        </TouchableOpacity>
-
-        <Text style={styles.hint}>
-          You'll receive a 6-digit OTP via SMS
+        {/* ── Terms ───────────────────────────────────────────── */}
+        <Text style={styles.terms}>
+          {'By continuing you agree to our '}
+          <Text style={styles.termsLink}>Terms</Text>
+          {' & '}
+          <Text style={styles.termsLink}>Privacy Policy</Text>
         </Text>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
-}
+});
+
+export default EnterPhoneScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    backgroundColor: colors.primary,
+  root:           { flex: 1, backgroundColor: COLORS.background },
+  scroll:         { flexGrow: 1, paddingBottom: 40 },
+  heroArea:       { alignItems: 'center', paddingTop: 56, paddingBottom: 8, paddingHorizontal: 24 },
+  illustCircle:   {
+    width: 100, height: 100, borderRadius: 50,
+    backgroundColor: COLORS.primaryBg,
+    alignItems: 'center', justifyContent: 'center',
+    ...SHADOWS.sm,
   },
-  logoWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
+  heading:        { fontSize: 28, fontWeight: '800', color: COLORS.slate900, textAlign: 'center', marginTop: 24, letterSpacing: -0.3 },
+  subtext:        { fontSize: 15, color: COLORS.slate400, textAlign: 'center', marginTop: 8, lineHeight: 22 },
+  card:           { marginHorizontal: 16, marginTop: 28, borderRadius: 20, padding: 20 },
+  cardLabel:      { fontSize: 10, fontWeight: '700', color: COLORS.slate500, letterSpacing: 1.1, marginBottom: 12 },
+  phoneRow:       {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderWidth: 1.5, borderColor: COLORS.slate200, borderRadius: 14,
+    overflow: 'hidden', minHeight: 56,
   },
-  appName: {
-    fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
-    color: colors.white,
-    textAlign: 'center',
-  },
-  tagline: {
-    fontSize: fontSize.md,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: spacing.xs,
-    textAlign: 'center',
-  },
-  form: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xl,
-  },
-  label: {
-    fontSize: fontSize.sm,
-    color: colors.text.secondary,
-    marginBottom: spacing.xs,
-    fontWeight: fontWeight.medium,
-  },
-  phoneRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 10,
-    backgroundColor: colors.card,
-    overflow: 'hidden',
-  },
-  phoneRowError: { borderColor: colors.danger },
-  prefix: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderRightWidth: 1,
-    borderRightColor: colors.border,
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-  prefixText: { fontSize: fontSize.md, color: colors.text.primary },
-  input: {
-    flex: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm + 2,
-    fontSize: fontSize.xl,
-    color: colors.text.primary,
-    letterSpacing: 2,
-  },
-  errorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  errorText: { color: colors.danger, fontSize: fontSize.xs },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.lg,
-    height: 52,
-  },
-  buttonDisabled: { opacity: 0.45 },
-  buttonText: { color: colors.white, fontSize: fontSize.lg, fontWeight: fontWeight.semiBold },
-  hint: {
-    textAlign: 'center',
-    color: colors.text.hint,
-    fontSize: fontSize.xs,
-    marginTop: spacing.md,
-  },
+  phoneRowError:  { borderColor: COLORS.danger, backgroundColor: COLORS.dangerLight },
+  prefixBox:      { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: COLORS.slate100, gap: 6 },
+  prefixFlag:     { fontSize: 16 },
+  prefixCode:     { fontSize: 15, fontWeight: '600', color: COLORS.slate700 },
+  vertDivider:    { width: 1, height: 28, backgroundColor: COLORS.slate200 },
+  numberInput:    { flex: 1, paddingHorizontal: 14, fontSize: 20, fontWeight: '600', color: COLORS.slate900, letterSpacing: 3 },
+  clearBtn:       { paddingRight: 12 },
+  errorRow:       { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
+  errorText:      { fontSize: 12, color: COLORS.danger, flex: 1 },
+  divider:        { height: 1, backgroundColor: COLORS.slate100, marginTop: 14, marginBottom: 10 },
+  otpHint:        { fontSize: 12, color: COLORS.slate400, textAlign: 'center' },
+  btnWrap:        { marginHorizontal: 16, marginTop: 16 },
+  sendBtn:        { height: 56 },
+  trustRow:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 18, gap: 6 },
+  trustText:      { fontSize: 12, color: COLORS.slate400 },
+  trustDot:       { width: 3, height: 3, borderRadius: 1.5, backgroundColor: COLORS.slate200 },
+  terms:          { fontSize: 11, color: COLORS.slate400, textAlign: 'center', marginTop: 24, marginHorizontal: 32, lineHeight: 16 },
+  termsLink:      { color: COLORS.primary, fontWeight: '600' },
 });

@@ -9,7 +9,7 @@ export default function Index() {
   const user = useAuthStore(s => s.user);
 
   if (!isAuthenticated) {
-    return <Redirect href="/(auth)/enter-phone" />;
+    return <Redirect href="/(auth)/splash" />;
   }
 
   if (user?.role === 'traveler') {
