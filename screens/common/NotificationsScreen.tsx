@@ -1,22 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
 import NotificationItem, { ITEM_HEIGHT } from '@/components/NotificationItem';
 import colors from '@/constants/colors';
 import spacing from '@/constants/spacing';
 import { fontSize, fontWeight } from '@/constants/typography';
-import { useNotifications } from '@/hooks/useNotifications';
 import type { NotificationTab } from '@/hooks/useNotifications';
+import { useNotifications } from '@/hooks/useNotifications';
 import type { Notification } from '@/types';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useCallback } from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 

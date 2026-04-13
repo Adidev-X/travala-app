@@ -13,7 +13,11 @@ export default function TripsLayout() {
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: colors.background },
       }}>
-      <Stack.Screen name="index" options={{ title: 'Dashboard' }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="document-upload"
+        options={{ title: 'Upload Documents' }}
+      />
       <Stack.Screen
         name="post-trip-type"
         options={{ title: 'Post a Trip', presentation: 'modal' }}

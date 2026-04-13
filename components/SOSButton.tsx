@@ -3,15 +3,15 @@
  * Uses React Native's Animated API only (no Reanimated).
  * Two concentric rings pulse outward continuously via Animated.loop.
  */
-import React, { memo, useEffect, useRef } from 'react';
-import {
-  Animated,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
 import colors from '@/constants/colors';
 import { fontSize, fontWeight } from '@/constants/typography';
+import React, { memo, useEffect, useRef } from 'react';
+import {
+    Animated,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+} from 'react-native';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

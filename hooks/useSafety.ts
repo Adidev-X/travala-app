@@ -4,10 +4,10 @@
  * NO GPS, NO location, NO real-time tracking.
  * Contacts are persisted in AsyncStorage under key 'safety_contacts'.
  */
+import type { Trip } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Linking, Share } from 'react-native';
-import type { Trip } from '@/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

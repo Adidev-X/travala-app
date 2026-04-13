@@ -74,8 +74,11 @@ export interface JoinRequest {
   userName: string;
   userPhoto?: string;
   userRating: number;
+  seats?: number;
+  message?: string;
   status: JoinRequestStatus;
   createdAt: string; // ISO date string
+  trip?: Pick<Trip, 'id' | 'title' | 'from' | 'to' | 'startDate' | 'costPerPerson'>;
 }
 
 // ─── Verification ────────────────────────────────────────────────────────────

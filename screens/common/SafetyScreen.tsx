@@ -8,30 +8,30 @@
  *  3. Emergency Contacts (AsyncStorage, max 2, add/edit/remove)
  *  4. Safety Tips accordion (3 tips, collapsed by default)
  */
-import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
-import React, { memo, useCallback, useRef, useState } from 'react';
-import {
-  Alert,
-  Animated,
-  FlatList,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
 import SOSButton from '@/components/SOSButton';
 import colors from '@/constants/colors';
 import spacing from '@/constants/spacing';
 import { fontSize, fontWeight } from '@/constants/typography';
 import { useSafety, type EmergencyContact } from '@/hooks/useSafety';
 import type { Trip } from '@/types';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
+import React, { memo, useCallback, useRef, useState } from 'react';
+import {
+    Alert,
+    Animated,
+    FlatList,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 // ─── Safety tips ──────────────────────────────────────────────────────────────
 
