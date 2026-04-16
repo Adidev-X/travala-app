@@ -9,6 +9,13 @@ import { DEMO_JOIN_REQUESTS, DEMO_TRAVELER_REQUESTS, isDemoMode } from './demoDa
 let _demoRequests: JoinRequest[] = DEMO_JOIN_REQUESTS.map(r => ({ ...r }));
 
 export const requestService = {
+  /** Get ALL requests across all of the rider's trips */
+  getAllForRider: async (): Promise<JoinRequest[]> => {
+    if (isDemoMode()) return [..._demoRequests];
+    const { data } = await api.get<ApiResponse<JoinRequest[]>>('/requests/all');
+    return data.data;
+  },
+
   /** Get all join requests for a trip (rider view) */
   getByTrip: async (tripId: string): Promise<JoinRequest[]> => {
     if (isDemoMode()) return _demoRequests.filter(r => r.tripId === tripId);

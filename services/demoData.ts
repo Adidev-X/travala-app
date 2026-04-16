@@ -10,14 +10,14 @@
 
 import { useAuthStore } from '../store/authStore';
 import type {
-    JoinRequest,
-    Notification,
-    Review,
-    RiderProfile,
-    RiderStats,
-    Trip,
-    User,
-    VerificationStatus,
+  JoinRequest,
+  Notification,
+  Review,
+  RiderProfile,
+  RiderStats,
+  Trip,
+  User,
+  VerificationStatus,
 } from '../types';
 import type { EmergencyContact, TrendingRoute } from '../types/api';
 
@@ -352,6 +352,7 @@ export const DEMO_TRENDING: TrendingRoute[] = [
 // ─── Join Requests — Rider's view (requests ON the rider's trips) ─────────────
 
 export const DEMO_JOIN_REQUESTS: JoinRequest[] = [
+  // ── trip-001 : Spiti Valley Adventure ────────────────────────────────────
   {
     id: 'req-001',
     tripId: 'trip-001',
@@ -359,7 +360,7 @@ export const DEMO_JOIN_REQUESTS: JoinRequest[] = [
     userName: 'Sneha Kapoor',
     userRating: 4.5,
     status: 'pending',
-    createdAt: '2026-04-12T14:30:00.000Z',
+    createdAt: '2026-04-15T14:30:00.000Z',
   },
   {
     id: 'req-002',
@@ -368,7 +369,7 @@ export const DEMO_JOIN_REQUESTS: JoinRequest[] = [
     userName: 'Rahul Verma',
     userRating: 4.2,
     status: 'pending',
-    createdAt: '2026-04-12T16:00:00.000Z',
+    createdAt: '2026-04-16T08:10:00.000Z',
   },
   {
     id: 'req-003',
@@ -377,25 +378,118 @@ export const DEMO_JOIN_REQUESTS: JoinRequest[] = [
     userName: 'Anjali Singh',
     userRating: 4.8,
     status: 'accepted',
-    createdAt: '2026-04-11T09:00:00.000Z',
+    createdAt: '2026-04-13T09:00:00.000Z',
   },
   {
     id: 'req-004',
-    tripId: 'trip-002',
+    tripId: 'trip-001',
     userId: 'traveler-104',
-    userName: 'Karan Malhotra',
-    userRating: 3.9,
-    status: 'pending',
-    createdAt: '2026-04-13T08:00:00.000Z',
+    userName: 'Pooja Nair',
+    userRating: 4.7,
+    status: 'accepted',
+    createdAt: '2026-04-14T18:20:00.000Z',
   },
   {
     id: 'req-005',
-    tripId: 'trip-002',
+    tripId: 'trip-001',
     userId: 'traveler-105',
+    userName: 'Vikram Sharma',
+    userRating: 3.8,
+    status: 'declined',
+    createdAt: '2026-04-12T11:00:00.000Z',
+  },
+  // ── trip-002 : Delhi to Manali Express ───────────────────────────────────
+  {
+    id: 'req-006',
+    tripId: 'trip-002',
+    userId: 'traveler-106',
+    userName: 'Karan Malhotra',
+    userRating: 4.1,
+    status: 'pending',
+    createdAt: '2026-04-16T07:30:00.000Z',
+  },
+  {
+    id: 'req-007',
+    tripId: 'trip-002',
+    userId: 'traveler-107',
+    userName: 'Riya Desai',
+    userRating: 4.6,
+    status: 'pending',
+    createdAt: '2026-04-15T21:00:00.000Z',
+  },
+  {
+    id: 'req-008',
+    tripId: 'trip-002',
+    userId: 'traveler-108',
+    userName: 'Arjun Mehta',
+    userRating: 4.4,
+    status: 'accepted',
+    createdAt: '2026-04-14T10:15:00.000Z',
+  },
+  {
+    id: 'req-009',
+    tripId: 'trip-002',
+    userId: 'traveler-109',
     userName: 'Neha Gupta',
     userRating: 4.6,
     status: 'declined',
-    createdAt: '2026-04-10T11:30:00.000Z',
+    createdAt: '2026-04-13T16:45:00.000Z',
+  },
+  {
+    id: 'req-010',
+    tripId: 'trip-002',
+    userId: 'traveler-110',
+    userName: 'Sameer Khan',
+    userRating: 3.5,
+    status: 'declined',
+    createdAt: '2026-04-12T09:00:00.000Z',
+  },
+  // ── trip-003 : Chandigarh → Kasol Weekend ────────────────────────────────
+  {
+    id: 'req-011',
+    tripId: 'trip-003',
+    userId: 'traveler-111',
+    userName: 'Divya Srivastava',
+    userRating: 4.9,
+    status: 'accepted',
+    createdAt: '2026-04-13T12:30:00.000Z',
+  },
+  {
+    id: 'req-012',
+    tripId: 'trip-003',
+    userId: 'traveler-112',
+    userName: 'Mohit Agarwal',
+    userRating: 4.3,
+    status: 'accepted',
+    createdAt: '2026-04-13T14:00:00.000Z',
+  },
+  {
+    id: 'req-013',
+    tripId: 'trip-003',
+    userId: 'traveler-113',
+    userName: 'Priya Khanna',
+    userRating: 4.0,
+    status: 'declined',
+    createdAt: '2026-04-12T08:15:00.000Z',
+  },
+  // ── trip-004 : Rajasthan Royal Tour (completed) ───────────────────────────
+  {
+    id: 'req-014',
+    tripId: 'trip-004',
+    userId: 'traveler-114',
+    userName: 'Ritika Joshi',
+    userRating: 4.5,
+    status: 'accepted',
+    createdAt: '2026-01-28T09:00:00.000Z',
+  },
+  {
+    id: 'req-015',
+    tripId: 'trip-004',
+    userId: 'traveler-115',
+    userName: 'Deepak Rao',
+    userRating: 4.2,
+    status: 'accepted',
+    createdAt: '2026-01-29T11:00:00.000Z',
   },
 ];
 

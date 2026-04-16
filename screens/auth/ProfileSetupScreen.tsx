@@ -55,6 +55,7 @@ const ProfileSetupScreen = React.memo(function ProfileSetupScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<ProfileSetupParams>();
   const phone  = params.phone ?? '';
+  const fromEdit = params.fromEdit === 'true' || (params as any).fromEdit === true;
 
   const { form, errors, loading, handleChange, handleImagePick, handleSubmit } =
     useProfileSetup(phone);
@@ -65,12 +66,16 @@ const ProfileSetupScreen = React.memo(function ProfileSetupScreen() {
   const onSubmit = useCallback(async () => {
     const ok = await handleSubmit();
     if (!ok) return;
+    if (fromEdit) {
+      router.back();
+      return;
+    }
     if (form.role === 'rider') {
       router.replace('/(tabs)/trips/verification');
     } else {
       router.replace('/(tabs)/home');
     }
-  }, [handleSubmit, form.role, router]);
+  }, [handleSubmit, form.role, router, fromEdit]);
 
   const avatarColor = getInitialsColor(form.name || 'U');
   const initials    = form.name ? getInitials(form.name) : '';
@@ -85,19 +90,7 @@ const ProfileSetupScreen = React.memo(function ProfileSetupScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
       {/* ── Header bar ──────────────────────────────────────────── */}
-      <View style={styles.headerBar}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={COLORS.slate700} />
-        </TouchableOpacity>
-
-        <View style={styles.progressArea}>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${progress * 100}%` as `${number}%` }]} />
-          </View>
-        </View>
-
-        <Text style={styles.stepLabel}>1 of {totalSteps}</Text>
-      </View>
+      
 
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -227,35 +220,7 @@ const ProfileSetupScreen = React.memo(function ProfileSetupScreen() {
         </AppCard>
 
         {/* ── Role selector ───────────────────────────────────────── */}
-        <View style={styles.roleSection}>
-          <Text style={styles.roleHeading}>I am joining as</Text>
-          <View style={styles.roleRow}>
-            {ROLES.map(opt => {
-              const active = form.role === opt.role;
-              return (
-                <TouchableOpacity
-                  key={opt.role}
-                  style={[
-                    styles.roleCard,
-                    active && { borderColor: opt.color, backgroundColor: opt.bg },
-                  ]}
-                  onPress={() => handleChange('role', opt.role)}
-                  activeOpacity={0.8}>
-                  {active && (
-                    <View style={[styles.roleCheckmark, { backgroundColor: opt.color }]}>
-                      <Ionicons name="checkmark" size={12} color={COLORS.white} />
-                    </View>
-                  )}
-                  <View style={[styles.roleEmojiCircle, { backgroundColor: active ? opt.color : COLORS.slate100 }]}>
-                    <Text style={styles.roleEmoji}>{opt.emoji}</Text>
-                  </View>
-                  <Text style={[styles.roleLabel, active && { color: opt.color }]}>{opt.label}</Text>
-                  <Text style={styles.roleSub}>{opt.sub}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+       
 
         {/* ── Submit ──────────────────────────────────────────────── */}
         <View style={styles.btnWrap}>

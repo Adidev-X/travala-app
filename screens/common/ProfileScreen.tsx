@@ -6,12 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 type MenuItem = {
@@ -42,7 +42,11 @@ export default function ProfileScreen() {
   };
 
   const MENU_ITEMS: MenuItem[] = [
-    { icon: 'person-outline', label: 'Edit Profile', route: '/(auth)/profile-setup' },
+    {
+      icon: 'person-outline',
+      label: 'Edit Profile',
+      onPress: () => router.push({ pathname: '/(tabs)/profile/edit-profile' as any, params: { fromEdit: 'true' } }),
+    },
     { icon: 'notifications-outline', label: 'Notifications', route: '/notifications' },
     { icon: 'shield-checkmark-outline', label: 'Safety', route: '/safety' },
     { icon: 'settings-outline', label: 'Settings', route: '/settings' },

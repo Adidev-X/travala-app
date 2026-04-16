@@ -52,8 +52,19 @@ interface StatCardProps {
   iconName: React.ComponentProps<typeof Ionicons>['name'];
   iconColor: string;
   iconBg: string;
+  onPress?: () => void;
 }
-const StatCard = React.memo(function StatCard({ label, value, iconName, iconColor, iconBg }: StatCardProps) {
+const StatCard = React.memo(function StatCard({ label, value, iconName, iconColor, iconBg, onPress }: StatCardProps) {
+  if (onPress) {
+    return (
+      <TouchableOpacity style={styles.statCard} onPress={onPress} activeOpacity={0.75}>
+        <IconCircle name={iconName} size={16} iconColor={iconColor} bg={iconBg} circleSize={32} />
+        <Text style={styles.statValue}>{value}</Text>
+        <Text style={styles.statLabel}>{label}</Text>
+        <Ionicons name="chevron-forward" size={11} color={iconColor} style={{ position: 'absolute', top: 10, right: 10 }} />
+      </TouchableOpacity>
+    );
+  }
   return (
     <View style={styles.statCard}>
       <IconCircle name={iconName} size={16} iconColor={iconColor} bg={iconBg} circleSize={32} />
@@ -183,6 +194,7 @@ const RiderDashboardScreen = React.memo(function RiderDashboardScreen() {
   }, [router, ctaScaleAnim]);
   const goNotifications = useCallback(() => router.push('/notifications'), [router]);
   const goSettings      = useCallback(() => router.push('/settings'),      [router]);
+  const goMyReviews     = useCallback(() => router.push('/(tabs)/trips/my-reviews' as never), [router]);
   const goPendingRequests = useCallback(() => {
     if (activeTrips.length > 0) {
       router.push({ pathname: '/(tabs)/trips/join-requests' as never, params: { tripId: activeTrips[0].id, tripTitle: activeTrips[0].title } });
@@ -277,6 +289,7 @@ const RiderDashboardScreen = React.memo(function RiderDashboardScreen() {
             iconName="star"
             iconColor={COLORS.accent}
             iconBg={COLORS.accentLight}
+            onPress={goMyReviews}
           />
         </View>
 

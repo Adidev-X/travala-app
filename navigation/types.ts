@@ -21,6 +21,7 @@ export type OTPParams = {
 export type ProfileSetupParams = {
   phone: string;
   isNewUser: '1' | '0'; // route params are always strings
+  fromEdit?: 'true' | 'false';
 };
 
 // ─── Traveler Stack (Home Tab) ────────────────────────────────────────────────

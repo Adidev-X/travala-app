@@ -22,13 +22,13 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { usePathname, useRouter } from 'expo-router';
 import React, { useCallback, useRef } from 'react';
 import {
-    Animated,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  Animated,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -47,6 +47,8 @@ interface TabDef {
   pushPath?: string;
   /** Substrings that mark this tab as active in the current pathname */
   matchPaths?: string[];
+  /** If true, pathname must exactly equal one of matchPaths */
+  exactMatch?: boolean;
   /** Badge count from store */
   badge?: number;
   /** Center POST FAB */
@@ -61,8 +63,9 @@ const buildRiderTabs = (pendingCount: number): TabDef[] => [
     label:        'Home',
     activeIcon:   'home',
     inactiveIcon: 'home-outline',
-    routeName:    'trips',
+    pushPath:     '/(tabs)/trips',
     matchPaths:   ['/trips'],
+    exactMatch:   true,
   },
   {
     key:          'my-trips',
@@ -85,8 +88,8 @@ const buildRiderTabs = (pendingCount: number): TabDef[] => [
     label:        'Requests',
     activeIcon:   'people',
     inactiveIcon: 'people-outline',
-    pushPath:     '/(tabs)/trips/join-requests',
-    matchPaths:   ['/trips/join-requests'],
+    pushPath:     '/(tabs)/trips/all-requests',
+    matchPaths:   ['/trips/all-requests', '/trips/join-requests'],
     badge:        pendingCount,
   },
   {
@@ -107,22 +110,6 @@ const TRAVELER_TABS: TabDef[] = [
     inactiveIcon: 'compass-outline',
     routeName:    'home',
     matchPaths:   ['/home'],
-  },
-  {
-    key:          'saved',
-    label:        'Saved',
-    activeIcon:   'bookmark',
-    inactiveIcon: 'bookmark-outline',
-    pushPath:     '/(tabs)/home',
-    matchPaths:   ['/saved'],
-  },
-  {
-    key:          'traveler-profile',
-    label:        'Profile',
-    activeIcon:   'person-circle',
-    inactiveIcon: 'person-circle-outline',
-    routeName:    'profile',
-    matchPaths:   ['/profile'],
   },
 ];
 
@@ -203,7 +190,8 @@ const CustomTabBar = React.memo(function CustomTabBar({
   const pendingCount = useUIStore(s => s.pendingRequestCount);
 
   const isRider = role === 'rider' || role === 'both';
-  const tabs = isRider ? buildRiderTabs(pendingCount) : TRAVELER_TABS;
+
+  const tabs = buildRiderTabs(pendingCount);
 
   // ── Per-tab scale animations (max 5 tabs) ──────────────────────────────
   const scaleAnims = useRef<Animated.Value[]>(
@@ -220,9 +208,14 @@ const CustomTabBar = React.memo(function CustomTabBar({
       const activeRoute = state.routes[state.index];
       return activeRoute?.name === tab.routeName;
     }
-    // Check if current pathname contains any of the matchPaths
+    // Check if current pathname matches any of the matchPaths
     if (tab.matchPaths) {
-      return tab.matchPaths.some(p => pathname.includes(p));
+      if (tab.exactMatch) {
+        // Must be an exact match
+        return tab.matchPaths.some(p => pathname === p);
+      }
+      // Partial: pathname starts with p (handles nested screens like /profile/edit-profile)
+      return tab.matchPaths.some(p => pathname === p || pathname.startsWith(p + '/'));
     }
     return false;
   }, [pathname, state]);
@@ -243,7 +236,7 @@ const CustomTabBar = React.memo(function CustomTabBar({
     }
 
     if (tab.pushPath) {
-      router.push(tab.pushPath as never);
+      router.navigate(tab.pushPath as never);
     } else if (tab.routeName) {
       const targetRoute = state.routes.find(r => r.name === tab.routeName);
       if (targetRoute) {
@@ -251,6 +244,9 @@ const CustomTabBar = React.memo(function CustomTabBar({
       }
     }
   }, [scaleAnims, postScaleAnim, router, navigation, state.routes]);
+
+  // Traveler has no visible footer tab bar — profile accessible via avatar
+  if (!isRider) return null;
 
   const barHeight = 64 + insets.bottom;
 

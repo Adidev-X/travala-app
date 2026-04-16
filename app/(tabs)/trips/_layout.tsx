@@ -25,11 +25,13 @@ export default function TripsLayout() {
       <Stack.Screen name="post-full-tour" options={{ title: 'Full Tour Trip' }} />
       <Stack.Screen name="post-one-way" options={{ title: 'One-Way Trip' }} />
       <Stack.Screen name="my-trips" options={{ title: 'My Trips' }} />
+      <Stack.Screen name="all-requests" options={{ headerShown: false }} />
       <Stack.Screen name="join-requests" options={{ title: 'Join Requests' }} />
       <Stack.Screen
         name="verification"
         options={{ title: 'Document Verification' }}
       />
+      <Stack.Screen name="my-reviews" options={{ headerShown: false }} />
     </Stack>
   );
 }

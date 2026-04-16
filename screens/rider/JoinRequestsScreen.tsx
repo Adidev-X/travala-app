@@ -36,6 +36,11 @@ function timeAgo(isoString: string): string {
   return `${days}d ago`;
 }
 
+function formatDate(isoString: string): string {
+  const d = new Date(isoString);
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 // ─── Avatar initials ──────────────────────────────────────────────────────────
 
 function initialsOf(name: string): string {
@@ -73,6 +78,7 @@ const JoinRequestCard = memo(function JoinRequestCard({
 }: JoinRequestCardProps) {
   const initials = initialsOf(item.userName);
   const ago = timeAgo(item.createdAt);
+  const dateStr = formatDate(item.createdAt);
   const ratingStr = item.userRating > 0 ? item.userRating.toFixed(1) : '—';
 
   return (
@@ -93,7 +99,7 @@ const JoinRequestCard = memo(function JoinRequestCard({
               <Text style={cs.ratingStar}>★</Text>
             </Text>
           </View>
-          <Text style={cs.ago}>Requested {ago}</Text>
+          <Text style={cs.ago}>Requested {ago}  •  {dateStr}</Text>
         </View>
 
         {/* Status chip for accepted / declined */}

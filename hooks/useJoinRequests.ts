@@ -56,7 +56,10 @@ export function useJoinRequests(tripId: string): UseJoinRequestsReturn {
   }, []);
 
   const load = useCallback(async (isRefresh = false) => {
-    if (!tripId) return;
+    if (!tripId) {
+      setLoading(false);
+      return;
+    }
     isRefresh ? setRefreshing(true) : setLoading(true);
     try {
       const data = await requestService.getByTrip(tripId);
