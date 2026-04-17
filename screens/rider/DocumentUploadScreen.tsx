@@ -189,7 +189,7 @@ export default function DocumentUploadScreen() {
       Alert.alert(
         'Submitted!',
         'Your document has been submitted for review. You will be notified within 24–48 hours.',
-        [{ text: 'OK', onPress: () => router.back() }],
+        [{ text: 'OK', onPress: () => router.canGoBack() ? router.back() : router.replace('/(tabs)/trips') }],
       );
     }
   }, [success, router]);
@@ -210,7 +210,7 @@ export default function DocumentUploadScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         style={styles.container}

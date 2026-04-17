@@ -48,8 +48,13 @@ export function useHomeData(userCity?: string): HomeData {
 
       if (!isMounted.current) return;
 
-      if (trendingData.status === 'fulfilled') setTrending(trendingData.value);
-      if (cityTrips.status === 'fulfilled') setLocalTrips(cityTrips.value);
+      // FIX: Array.isArray guards — API returns may not be arrays if response is malformed
+      if (trendingData.status === 'fulfilled') {
+        setTrending(Array.isArray(trendingData.value) ? trendingData.value : []);
+      }
+      if (cityTrips.status === 'fulfilled') {
+        setLocalTrips(Array.isArray(cityTrips.value) ? cityTrips.value : []);
+      }
 
       if (trendingData.status === 'rejected' && cityTrips.status === 'rejected') {
         setError('Could not load trips. Pull down to retry.');

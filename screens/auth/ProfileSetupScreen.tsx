@@ -11,7 +11,7 @@ import type { ProfileSetupParams } from '@/navigation/types';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -60,14 +60,41 @@ const ProfileSetupScreen = React.memo(function ProfileSetupScreen() {
   const { form, errors, loading, handleChange, handleImagePick, handleSubmit } =
     useProfileSetup(phone);
 
+  // VALIDATION ADDED: scrollRef for scroll-to-first-error
+  const scrollRef = useRef<ScrollView>(null);
+
+  // VALIDATION ADDED: validateForm wraps the hook's validation, returns errors Record
+  const validateForm = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
+    if (!form.name.trim() || form.name.trim().length < 2) {
+      errs.name = 'Name must be 2-50 letters only';
+    } else if (!/^[a-zA-Z\s]{2,50}$/.test(form.name.trim())) {
+      errs.name = 'Name must be 2-50 letters only';
+    }
+    if (!form.city.trim()) {
+      errs.city = 'Please select your city';
+    }
+    if (form.whatsapp && !/^[6-9]\d{9}$/.test(form.whatsapp.replace(/\D/g, ''))) {
+      errs.whatsapp = 'Valid 10-digit number required';
+    }
+    return errs;
+  };
+
   const totalSteps = form.role === 'rider' ? 2 : 1;
   const progress   = 1 / totalSteps;
 
   const onSubmit = useCallback(async () => {
+    // VALIDATION ADDED: validate before API call, scroll to first error
+    const errs = validateForm();
+    if (Object.keys(errs).length > 0) {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+      return;
+    }
     const ok = await handleSubmit();
     if (!ok) return;
     if (fromEdit) {
-      router.back();
+      // CRASH FIX: router.back() without canGoBack check crashes when no history exists
+      router.canGoBack() ? router.back() : router.replace('/(tabs)/home');
       return;
     }
     if (form.role === 'rider') {
@@ -75,7 +102,7 @@ const ProfileSetupScreen = React.memo(function ProfileSetupScreen() {
     } else {
       router.replace('/(tabs)/home');
     }
-  }, [handleSubmit, form.role, router, fromEdit]);
+  }, [handleSubmit, form.role, form.name, form.city, form.whatsapp, router, fromEdit]);
 
   const avatarColor = getInitialsColor(form.name || 'U');
   const initials    = form.name ? getInitials(form.name) : '';
@@ -86,13 +113,28 @@ const ProfileSetupScreen = React.memo(function ProfileSetupScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      style={styles.root}      // FIX: Android needs 'height' — undefined disables KAV on Android
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
 
       {/* ── Header bar ──────────────────────────────────────────── */}
-      
+      {/* FIX: restored header bar with back button and progress indicator */}
+      <View style={styles.headerBar}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(auth)/enter-phone')}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Ionicons name="arrow-back" size={20} color={COLORS.slate700} />
+        </TouchableOpacity>
+        <View style={styles.progressArea}>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+          </View>
+        </View>
+        <Text style={styles.stepLabel}>Step 1/{totalSteps}</Text>
+      </View>
 
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
@@ -193,7 +235,8 @@ const ProfileSetupScreen = React.memo(function ProfileSetupScreen() {
                 keyboardType="phone-pad"
                 maxLength={10}
                 value={form.whatsapp}
-                onChangeText={v => handleChange('whatsapp', v.replace(/D/g, ''))}
+                // FIX: was /D/g (removes literal 'D'); must be /\D/g to strip non-digits
+                onChangeText={v => handleChange('whatsapp', v.replace(/\D/g, ''))}
               />
             </View>
             {errors.whatsapp ? <Text style={styles.fieldError}>{errors.whatsapp}</Text> : null}
@@ -203,7 +246,10 @@ const ProfileSetupScreen = React.memo(function ProfileSetupScreen() {
           <View style={styles.fieldWrap}>
             <View style={styles.fieldLabelRow}>
               <Text style={styles.fieldLabel}>{'Bio (optional)'}</Text>
-              <Text style={styles.charCount}>{form.bio.length}/150</Text>
+              {/* FIX: bio char counter turns red when approaching limit (140+) */}
+              <Text style={[styles.charCount, form.bio.length >= 140 && styles.charCountWarn]}>
+                {form.bio.length}/150
+              </Text>
             </View>
             <TextInput
               style={[styles.inputRow, styles.textArea]}
@@ -220,7 +266,37 @@ const ProfileSetupScreen = React.memo(function ProfileSetupScreen() {
         </AppCard>
 
         {/* ── Role selector ───────────────────────────────────────── */}
-       
+        {/* FIX: restored role selector UI — was empty/commented out, leaving role stuck at default */}
+        <View style={styles.roleSection}>
+          <Text style={styles.roleHeading}>I want to</Text>
+          {errors.role ? <Text style={styles.fieldError}>{errors.role}</Text> : null}
+          <View style={styles.roleRow}>
+            {ROLES.map(opt => {
+              const isSelected = form.role === opt.role;
+              return (
+                <TouchableOpacity
+                  key={opt.role}
+                  style={[
+                    styles.roleCard,
+                    isSelected && { borderColor: opt.color, backgroundColor: opt.bg },
+                  ]}
+                  onPress={() => handleChange('role', opt.role)}
+                  activeOpacity={0.8}>
+                  {isSelected && (
+                    <View style={[styles.roleCheckmark, { backgroundColor: opt.color }]}>
+                      <Ionicons name="checkmark" size={12} color={COLORS.white} />
+                    </View>
+                  )}
+                  <View style={[styles.roleEmojiCircle, { backgroundColor: isSelected ? opt.color + '22' : COLORS.slate100 }]}>
+                    <Text style={styles.roleEmoji}>{opt.emoji}</Text>
+                  </View>
+                  <Text style={[styles.roleLabel, isSelected && { color: opt.color }]}>{opt.label}</Text>
+                  <Text style={styles.roleSub}>{opt.sub}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
 
         {/* ── Submit ──────────────────────────────────────────────── */}
         <View style={styles.btnWrap}>
@@ -281,6 +357,8 @@ const styles = StyleSheet.create({
   required:         { color: COLORS.danger },
   fieldLabelRow:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   charCount:        { fontSize: 11, color: COLORS.slate400 },
+  // FIX: charCountWarn turns red when bio approaches 150-char limit (at 140+)
+  charCountWarn:    { color: COLORS.danger, fontWeight: '600' },
   inputRow:         { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: COLORS.slate200, borderRadius: 12, backgroundColor: COLORS.white, minHeight: 48 },
   inputRowError:    { borderColor: COLORS.danger },
   inputIcon:        { paddingLeft: 12, paddingRight: 4 },
@@ -289,6 +367,8 @@ const styles = StyleSheet.create({
   waIconBox:        { paddingHorizontal: 12, paddingVertical: 10 },
   vertDivider:      { width: 1, height: 28, backgroundColor: COLORS.slate200 },
   fieldError:       { fontSize: 11, color: COLORS.danger, marginTop: 4 },
+  // VALIDATION ADDED: errorText style per spec
+  errorText:        { fontSize: 12, color: COLORS.danger, marginTop: 4, marginLeft: 4 },
   suggestions:      { backgroundColor: COLORS.white, borderWidth: 1, borderColor: COLORS.slate200, borderRadius: 10, marginTop: 4, overflow: 'hidden', ...SHADOWS.xs },
   suggestionItem:   { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.slate100 },
   suggestionText:   { fontSize: 14, color: COLORS.slate700 },

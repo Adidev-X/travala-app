@@ -136,7 +136,8 @@ export default function NotificationsScreen() {
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       ) : (
         <FlatList
-          data={filteredList}
+          // FIX: added ?? [] guard — undefined data crashes FlatList
+          data={filteredList ?? []}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}

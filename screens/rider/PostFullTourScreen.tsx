@@ -12,7 +12,7 @@ import TagInput from '@/components/TagInput';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -119,25 +119,33 @@ const PostFullTourScreen = React.memo(function PostFullTourScreen() {
     setField, addStop, removeStop,
     addDestination, removeDestination,
     addDay, removeDay, updateDayDesc,
-    addPhoto, removePhoto, submit,
+    addPhoto, removePhoto, submit, validateForm,
   } = usePostTrip('full_tour', vehicle);
 
   const maxSeats = config.MAX_SEATS;
+  // VALIDATION ADDED: scrollRef for scroll-to-first-error
+  const scrollRef = useRef<ScrollView>(null);
 
   const handleSubmit = useCallback(async () => {
+    // VALIDATION ADDED: validate before API call, scroll to first error if any
+    const valid = validateForm();
+    if (!valid) {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+      return;
+    }
     const trip = await submit();
     if (trip) {
       Alert.alert('Trip Posted!', 'Your Full Tour has been posted.', [
         { text: 'OK', onPress: () => router.replace('/(tabs)/trips') },
       ]);
     }
-  }, [submit, router]);
+  }, [submit, validateForm, router]);
 
   return (
     <View style={ss.root}>
       {/* ── Sticky header ─────────────────────────────────────────── */}
       <View style={ss.stickyHeader}>
-        <TouchableOpacity style={ss.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={ss.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/trips')}>
           <Ionicons name="arrow-back" size={22} color={COLORS.slate700} />
         </TouchableOpacity>
         <Text style={ss.headerTitle}>Post Full Tour</Text>
@@ -146,8 +154,11 @@ const PostFullTourScreen = React.memo(function PostFullTourScreen() {
         </View>
       </View>
 
-      <KeyboardAvoidingView style={ss.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* FIX: Android needs 'height' — undefined disables KAV on Android */}
+      <KeyboardAvoidingView style={ss.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        {/* VALIDATION ADDED: scrollRef for scroll-to-first-error */}
         <ScrollView
+          ref={scrollRef}
           style={ss.scroll}
           contentContainerStyle={ss.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -464,6 +475,8 @@ const ss = StyleSheet.create({
   fieldWrap:   { marginBottom: 4 },
   fieldLabel:  { fontSize: 12, fontWeight: '600', color: COLORS.slate600, marginBottom: 8 },
   fieldError:  { fontSize: 11, color: COLORS.danger, marginTop: 4 },
+  // VALIDATION ADDED: errorText style per spec
+  errorText:   { fontSize: 12, color: COLORS.danger, marginTop: 4, marginLeft: 4 },
   fieldDivider:{ height: 1, backgroundColor: COLORS.slate100, marginTop: 12, marginBottom: 12 },
   input:       {
     backgroundColor: COLORS.slate50, borderRadius: 10,

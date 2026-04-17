@@ -102,7 +102,7 @@ export default function RequestsScreen() {
   return (
     <FlatList
       style={styles.container}
-      data={requests}
+      data={requests ?? []}
       keyExtractor={item => item.id}
       renderItem={renderItem}
       contentContainerStyle={requests.length === 0 ? styles.emptyContainer : undefined}

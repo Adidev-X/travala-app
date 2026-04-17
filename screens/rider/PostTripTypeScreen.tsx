@@ -126,7 +126,7 @@ const PostTripTypeScreen = React.memo(function PostTripTypeScreen() {
     <View style={styles.root}>
       {/* ── Header ─────────────────────────────────────────────── */}
       <View style={styles.headerBar}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/trips')}>
           <Ionicons name="arrow-back" size={22} color={COLORS.slate700} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Create a Trip</Text>

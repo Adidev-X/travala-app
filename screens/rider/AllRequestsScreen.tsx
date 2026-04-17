@@ -10,7 +10,7 @@ import { tripService } from '@/services/trips';
 import type { JoinRequest, Trip } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     RefreshControl,
@@ -152,6 +152,12 @@ export default function AllRequestsScreen() {
   const [requests, setRequests]     = useState<JoinRequest[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  // CRASH FIX: isMounted ref prevents setState on unmounted component
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
 
   const load = useCallback(async (isRefresh = false) => {
     isRefresh ? setRefreshing(true) : setLoading(true);
@@ -160,11 +166,22 @@ export default function AllRequestsScreen() {
         tripService.getMyTrips(),
         requestService.getAllForRider(),
       ]);
-      setTrips(myTrips);
-      setRequests(allReqs);
+      // CRASH FIX: Array.isArray guards — API may return null/undefined on error states
+      if (isMounted.current) {
+        setTrips(Array.isArray(myTrips) ? myTrips : []);
+        setRequests(Array.isArray(allReqs) ? allReqs : []);
+      }
+    } catch {
+      // CRASH FIX: missing catch block — unhandled rejection crashed the component tree
+      if (isMounted.current) {
+        setTrips([]);
+        setRequests([]);
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (isMounted.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 

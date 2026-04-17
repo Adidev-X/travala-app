@@ -27,33 +27,48 @@ const EnterPhoneScreen = React.memo(function EnterPhoneScreen() {
   const inputRef = useRef<TextInput>(null);
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  // VALIDATION ADDED: errors Record state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const scrollRef = useRef<ScrollView>(null);
 
   const isValid = validatePhone(phone);
 
+  // VALIDATION ADDED: validateForm returns errors Record
+  const validateForm = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
+    if (!validatePhone(phone)) {
+      errs.phone = 'Valid 10-digit number required';
+    }
+    return errs;
+  };
+
   const handleSendOTP = useCallback(async () => {
-    if (!isValid) {
-      setError('Please enter a valid 10-digit mobile number (starts with 6-9).');
+    // VALIDATION ADDED: run validateForm before API call
+    const errs = validateForm();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
       return;
     }
-    setError('');
     setLoading(true);
     try {
       await authService.sendOTP({ phone: normalisePhone(phone) });
       const params: OTPParams = { phone: normalisePhone(phone) };
       router.push({ pathname: '/(auth)/otp', params });
     } catch {
-      setError('Failed to send OTP. Please try again.');
+      setErrors({ phone: 'Failed to send OTP. Please try again.' });
     } finally {
       setLoading(false);
     }
-  }, [phone, isValid, router]);
+  }, [phone, router]);
 
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      // FIX: Android needs 'height' — undefined disables KAV on Android
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
@@ -74,7 +89,7 @@ const EnterPhoneScreen = React.memo(function EnterPhoneScreen() {
           <Text style={styles.cardLabel}>ENTER YOUR MOBILE NUMBER</Text>
 
           <TouchableOpacity
-            style={[styles.phoneRow, error ? styles.phoneRowError : null]}
+            style={[styles.phoneRow, errors.phone ? styles.phoneRowError : null]}
             activeOpacity={0.85}
             onPress={() => inputRef.current?.focus()}>
             <View style={styles.prefixBox}>
@@ -91,8 +106,10 @@ const EnterPhoneScreen = React.memo(function EnterPhoneScreen() {
               maxLength={10}
               value={phone}
               onChangeText={t => {
-                setError('');
-                setPhone(t.replace(/D/g, ''));
+                // VALIDATION ADDED: clear field error on change
+                setErrors(prev => ({ ...prev, phone: '' }));
+                // FIX: was /D/g (removes literal 'D'); must be /\D/g to remove all non-digits
+                setPhone(t.replace(/\D/g, ''));
               }}
               returnKeyType="done"
               onSubmitEditing={handleSendOTP}
@@ -100,17 +117,18 @@ const EnterPhoneScreen = React.memo(function EnterPhoneScreen() {
             {phone.length > 0 && (
               <TouchableOpacity
                 style={styles.clearBtn}
-                onPress={() => { setPhone(''); setError(''); inputRef.current?.focus(); }}
+                onPress={() => { setPhone(''); setErrors({}); inputRef.current?.focus(); }}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <Ionicons name="close-circle" size={18} color={COLORS.slate300} />
               </TouchableOpacity>
             )}
           </TouchableOpacity>
 
-          {error ? (
+          {/* VALIDATION ADDED: inline error display below phone input */}
+          {errors.phone ? (
             <View style={styles.errorRow}>
               <Ionicons name="alert-circle-outline" size={13} color={COLORS.danger} />
-              <Text style={styles.errorText}>{error}</Text>
+              <Text style={styles.errorText}>{errors.phone}</Text>
             </View>
           ) : null}
 

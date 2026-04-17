@@ -83,7 +83,8 @@ export default function HomeScreen() {
   // Memoised filtered trips
   const filteredTrips = useMemo<Trip[]>(() => {
     if (vehicleFilter === 'all') return localTrips.slice(0, 5);
-    return localTrips.filter(t => t.vehicle.type === vehicleFilter).slice(0, 5);
+    // CRASH FIX: vehicle may be undefined from API — optional chaining prevents crash
+    return localTrips.filter(t => t.vehicle?.type === vehicleFilter).slice(0, 5);
   }, [localTrips, vehicleFilter]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
@@ -348,7 +349,8 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           <FlatList
-            data={trending}
+            // FIX: added ?? [] guard — undefined data crashes FlatList
+            data={trending ?? []}
             keyExtractor={item => `${item.from}-${item.to}`}
             renderItem={renderTrending}
             horizontal
@@ -383,7 +385,8 @@ export default function HomeScreen() {
           </View>
         ) : (
           <FlatList
-            data={filteredTrips}
+            // FIX: added ?? [] guard — undefined data crashes FlatList
+            data={filteredTrips ?? []}
             keyExtractor={item => item.id}
             renderItem={renderTripCard}
             scrollEnabled={false}

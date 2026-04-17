@@ -107,7 +107,7 @@ export default function RiderReviewsScreen() {
       {/* Header */}
       <View style={ss.headerBar}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/trips')}
           style={ss.backBtn}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="arrow-back" size={22} color={COLORS.slate800} />
@@ -127,7 +127,7 @@ export default function RiderReviewsScreen() {
         </View>
       ) : (
         <FlatList
-          data={reviews}
+          data={reviews ?? []}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
           ListHeaderComponent={<StarSummary avg={avg} total={reviews.length} />}

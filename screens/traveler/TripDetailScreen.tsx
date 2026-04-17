@@ -78,7 +78,7 @@ const PhotoArea = memo(function PhotoArea({
   return (
     <View style={s.photoWrap}>
       <FlatList
-        data={photos}
+        data={photos ?? []}
         keyExtractor={(_, i) => String(i)}
         renderItem={({ item }) => (
           // eslint-disable-next-line react-native/no-inline-styles
@@ -288,6 +288,19 @@ export default function TripDetailScreen() {
   const { tripId = '' } = useLocalSearchParams<TripDetailParams>();
   const { trip, loading, error, retry, isSaved, toggleSave } = useTripDetail(tripId);
 
+  // FIX: guard against missing tripId — show error state instead of crashing useTripDetail
+  if (!tripId) {
+    return (
+      <View style={s.centered}>
+        <Ionicons name="alert-circle-outline" size={52} color={COLORS.danger} />
+        <Text style={s.errorTitle}>Trip not found</Text>
+        <TouchableOpacity style={s.retryBtn} onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} activeOpacity={0.85}>
+          <Text style={s.retryText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   const infoItems = useMemo<InfoGridItem[]>(() => {
     if (!trip) return [];
     const items: InfoGridItem[] = [
@@ -303,14 +316,15 @@ export default function TripDetailScreen() {
     }
     items.push({
       label: 'Vehicle',
-      value: `${trip.vehicle.type.charAt(0).toUpperCase() + trip.vehicle.type.slice(1)}${trip.vehicle.model ? ' · ' + trip.vehicle.model : ''}`,
+      // FIX: added optional chaining — vehicle.type could be undefined if API data is incomplete
+      value: `${(trip.vehicle?.type ?? 'vehicle').charAt(0).toUpperCase() + (trip.vehicle?.type ?? 'vehicle').slice(1)}${trip.vehicle?.model ? ' · ' + trip.vehicle.model : ''}`,
       icon: 'car-outline',
     });
     items.push({
       label: 'AC',
-      value: trip.vehicle.ac ? 'Yes' : 'No',
+      value: trip.vehicle?.ac ? 'Yes' : 'No',
       icon: 'snow-outline',
-      valueColor: trip.vehicle.ac ? COLORS.primary : COLORS.slate400,
+      valueColor: trip.vehicle?.ac ? COLORS.primary : COLORS.slate400,
     });
     if (trip.luggagePolicy) {
       items.push({ label: 'Luggage', value: trip.luggagePolicy, icon: 'briefcase-outline' });
@@ -383,7 +397,8 @@ export default function TripDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Photo area ────────────────────────────────────────────────── */}
-        <PhotoArea photos={trip.photos ?? []} vehicleType={trip.vehicle.type} />
+        {/* FIX: added optional chaining on vehicle.type — undefined vehicle crashes */}
+        <PhotoArea photos={trip.photos ?? []} vehicleType={trip.vehicle?.type ?? 'car'} />
 
         {/* ── Floating content card ─────────────────────────────────────── */}
         <View style={s.floatingCard}>
@@ -395,8 +410,9 @@ export default function TripDetailScreen() {
           {/* Rider row */}
           <RiderRow
             riderId={trip.riderId}
-            rcVerified={trip.vehicle.rcVerified}
-            dlVerified={trip.vehicle.dlVerified}
+            // FIX: optional chaining — vehicle may be undefined in partial API responses
+            rcVerified={trip.vehicle?.rcVerified ?? false}
+            dlVerified={trip.vehicle?.dlVerified ?? false}
             onPress={handleRiderProfile}
           />
 
@@ -497,7 +513,8 @@ export default function TripDetailScreen() {
 
       {/* ═══ HEADER OVERLAY BUTTONS ══════════════════════════════════════════ */}
       <View style={s.headerOverlay} pointerEvents="box-none">
-        <TouchableOpacity style={s.headerCircleBtn} onPress={router.back} activeOpacity={0.85}>
+        {/* FIX: router.back passed directly as ref loses `this` context — use arrow fn */}
+        <TouchableOpacity style={s.headerCircleBtn} onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} activeOpacity={0.85}>
           <Ionicons name="chevron-back" size={22} color={COLORS.slate800} />
         </TouchableOpacity>
         <TouchableOpacity style={s.headerCircleBtn} onPress={toggleSave} activeOpacity={0.85}>

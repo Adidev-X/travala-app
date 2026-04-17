@@ -127,7 +127,8 @@ const RatingSummary = memo(function RatingSummary({
 
 export default function RiderProfileScreen() {
   const router = useRouter();
-  const { riderId } = useLocalSearchParams<RiderProfileParams>();
+  // CRASH FIX: riderId may be undefined if screen is opened without params — default to '' prevents hook receiving undefined
+  const { riderId = '' } = useLocalSearchParams<RiderProfileParams>();
   const { profile, trips, reviews, loading, error, retry } = useRiderProfile(riderId);
   const [showAllReviews, setShowAllReviews] = useState(false);
 
@@ -181,11 +182,11 @@ export default function RiderProfileScreen() {
     <View style={ss.root}>
       {/* ── Header bar ───────────────────────────────────────────────────── */}
       <View style={ss.headerBar}>
-        <TouchableOpacity onPress={() => router.back()} style={ss.backBtn} hitSlop={8}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} style={ss.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
         <Text style={ss.headerTitle}>Rider Profile</Text>
-        <TouchableOpacity onPress={handleReport} hitSlop={8}>
+        <TouchableOpacity onPress={handleReport} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Text style={ss.reportLink}>Report</Text>
         </TouchableOpacity>
       </View>
@@ -294,7 +295,8 @@ export default function RiderProfileScreen() {
             </View>
           ) : (
             <FlatList
-              data={trips}
+              // FIX: added ?? [] guard — undefined data crashes FlatList
+              data={trips ?? []}
               keyExtractor={t => t.id}
               horizontal
               showsHorizontalScrollIndicator={false}

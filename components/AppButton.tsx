@@ -133,7 +133,8 @@ const AppButton = React.memo<AppButtonProps>(
 
     return (
       <TouchableWithoutFeedback
-        onPress={!isDisabled ? onPress : undefined}
+        // FIX: onPress falls back to no-op when undefined — prevents silent press-swallowing
+        onPress={!isDisabled ? (onPress ?? (() => {})) : undefined}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         accessible

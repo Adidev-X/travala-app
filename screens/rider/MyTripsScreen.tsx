@@ -398,7 +398,8 @@ export default function MyTripsScreen() {
     dispatch({ type: isRefresh ? 'REFRESH_START' : 'LOAD_START' });
     try {
       const data = await tripService.getMyTrips();
-      if (isMounted.current) dispatch({ type: 'SUCCESS', trips: data });
+      // CRASH FIX: Array.isArray guard — API may return null/undefined instead of array
+      if (isMounted.current) dispatch({ type: 'SUCCESS', trips: Array.isArray(data) ? data : [] });
     } catch {
       if (isMounted.current) {
         dispatch({ type: 'ERROR' });
@@ -542,7 +543,8 @@ export default function MyTripsScreen() {
 
       {/* List */}
       <FlatList
-        data={filteredTrips}
+        // FIX: added ?? [] guard — undefined data crashes FlatList
+        data={filteredTrips ?? []}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         getItemLayout={getItemLayout}

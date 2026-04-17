@@ -345,7 +345,7 @@ export default function SafetyScreen() {
             {contacts.length > 0 ? (
               <>
                 <FlatList
-                  data={contacts}
+                  data={contacts ?? []}
                   keyExtractor={item => item.id}
                   scrollEnabled={false}
                   renderItem={({ item }) => (

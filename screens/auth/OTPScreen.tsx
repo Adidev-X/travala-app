@@ -94,14 +94,29 @@ const OTPScreen = React.memo(function OTPScreen() {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState('');
+  // VALIDATION ADDED: errors Record state (per spec)
+  const [errors,       setErrors]       = useState<Record<string, string>>({});
+  // FIX: track wrong attempts — show lockout message after 3 failures
+  const [wrongAttempts, setWrongAttempts] = useState(0);
   const shakeAnim  = useRef(new Animated.Value(0)).current;
   const inputRefs  = useRef<(TextInput | null)[]>(Array(OTP_LENGTH).fill(null));
   const pulseAnim  = useRef(new Animated.Value(1)).current;
+  // FIX: isSubmitting prevents double-tap submit while request is in flight
+  const isSubmitting = useRef(false);
 
   const { timeLeft, isExpired, restart } = useOTPTimer(45);
 
   const otp        = digits.join('');
   const isComplete = otp.length === OTP_LENGTH && !digits.includes('');
+
+  // VALIDATION ADDED: validateForm returns errors Record
+  const validateForm = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
+    if (!isComplete || digits.some(d => !/^[0-9]$/.test(d))) {
+      errs.otp = 'Enter complete OTP';
+    }
+    return errs;
+  };
 
   // Pulse when complete
   useEffect(() => {
@@ -128,8 +143,11 @@ const OTPScreen = React.memo(function OTPScreen() {
   }, [shakeAnim]);
 
   const handleDigitChange = useCallback((text: string, index: number) => {
-    const digit = text.replace(/D/g, '').slice(-1);
+    // FIX: was /D/g (removes literal 'D'); must be /\D/g to strip all non-digit chars
+    const digit = text.replace(/\D/g, '').slice(-1);
     setError('');
+    // VALIDATION ADDED: clear field error on digit change
+    setErrors({});
     const updated = [...digits];
     updated[index] = digit;
     setDigits(updated);
@@ -150,7 +168,23 @@ const OTPScreen = React.memo(function OTPScreen() {
   }, [digits]);
 
   const handleVerify = useCallback(async () => {
-    if (!isComplete) return;
+    // VALIDATION ADDED: run validateForm before API call
+    const errs = validateForm();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      triggerShake();
+      setError(errs.otp ?? 'Enter complete OTP');
+      return;
+    }
+    // FIX: isSubmitting guard — prevents double submit on rapid taps
+    if (isSubmitting.current || loading) return;
+    // FIX: lockout after 3 wrong attempts
+    if (wrongAttempts >= 3) {
+      setError('Too many attempts. Please request a new OTP.');
+      return;
+    }
+    isSubmitting.current = true;
+    setErrors({});
     setError('');
     setLoading(true);
     try {
@@ -163,14 +197,22 @@ const OTPScreen = React.memo(function OTPScreen() {
         setUser(result.data.user);
       }
     } catch {
-      setError('Invalid or expired OTP. Please try again.');
+      // FIX: increment wrong attempt count; lock out after 3
+      const newAttempts = wrongAttempts + 1;
+      setWrongAttempts(newAttempts);
+      if (newAttempts >= 3) {
+        setError('Too many attempts. Request a new OTP.');
+      } else {
+        setError('Invalid or expired OTP. Please try again.');
+      }
       triggerShake();
       setDigits(Array(OTP_LENGTH).fill(''));
       setTimeout(() => { inputRefs.current[0]?.focus(); setFocusedIndex(0); }, 100);
     } finally {
       setLoading(false);
+      isSubmitting.current = false;
     }
-  }, [otp, isComplete, phone, router, setTokens, setUser, triggerShake]);
+  }, [otp, isComplete, loading, wrongAttempts, phone, router, setTokens, setUser, triggerShake]);
 
   const handleResend = useCallback(async () => {
     if (!isExpired) return;
@@ -179,6 +221,8 @@ const OTPScreen = React.memo(function OTPScreen() {
       restart();
       setDigits(Array(OTP_LENGTH).fill(''));
       setError('');
+      // FIX: reset wrong attempts counter on resend so user gets fresh 3 tries
+      setWrongAttempts(0);
       setTimeout(() => { inputRefs.current[0]?.focus(); setFocusedIndex(0); }, 100);
     } catch {
       setError('Failed to resend OTP. Please try again.');
@@ -190,7 +234,8 @@ const OTPScreen = React.memo(function OTPScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      // FIX: Android needs 'height' not undefined — undefined disables KeyboardAvoidingView on Android
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.content}>
 
         {/* ── Header ──────────────────────────────────────── */}
@@ -200,7 +245,7 @@ const OTPScreen = React.memo(function OTPScreen() {
         <Text style={styles.heading}>Verify Your Number</Text>
         <TouchableOpacity
           style={styles.subRow}
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(auth)/enter-phone')}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Text style={styles.subText}>{'OTP sent to +91 '}</Text>
           <Text style={styles.phoneText}>{phone}</Text>
@@ -319,7 +364,8 @@ const styles = StyleSheet.create({
 
   // Error
   errorRow:  { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 12 },
-  errorText: { fontSize: 13, color: COLORS.danger },
+  // VALIDATION ADDED: errorText style per spec
+  errorText: { fontSize: 12, color: COLORS.danger, marginTop: 4, marginLeft: 4 },
 
   // Button
   verifyBtn: { height: 52 },

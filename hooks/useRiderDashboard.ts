@@ -2,7 +2,7 @@
 // Aggregates verification status, active trips, and rider stats in a single
 // parallel fetch so the dashboard renders with one loading state.
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { tripService } from '../services/trips';
 import { userService } from '../services/userService';
 import { verificationService } from '../services/verificationService';
@@ -43,6 +43,12 @@ export function useRiderDashboard(): UseRiderDashboardReturn {
   const [stats, setStats] = useState<RiderStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // FIX: isMounted ref prevents setState on unmounted component (memory leak warning)
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
 
   // ── Fetch all in parallel ──────────────────────────────────────────────────
 
@@ -55,15 +61,19 @@ export function useRiderDashboard(): UseRiderDashboardReturn {
         tripService.getMyTrips(),
         userService.getRiderStats(),
       ]);
+      // FIX: guard all setStates behind isMounted to avoid memory leak
+      if (!isMounted.current) return;
       setVerificationStatus(verStatus);
-      setAllTrips(trips);
+      // FIX: Array.isArray guard — API might return non-array on error
+      setAllTrips(Array.isArray(trips) ? trips : []);
       setStats(riderStats);
     } catch (err: unknown) {
+      if (!isMounted.current) return;
       const message =
         err instanceof Error ? err.message : 'Failed to load dashboard.';
       setError(message);
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   }, []);
 

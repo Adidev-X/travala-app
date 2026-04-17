@@ -144,14 +144,16 @@ const TripCard = memo(function TripCard({
           <View style={styles.routeMeta}>
             <View style={styles.vehicleChip}>
               <Ionicons
-                name={VEHICLE_ICONS[trip.vehicle.type] ?? 'car-outline'}
+                // FIX: optional chaining — vehicle or vehicle.type may be undefined
+                name={VEHICLE_ICONS[trip.vehicle?.type ?? 'car'] ?? 'car-outline'}
                 size={12}
                 color={COLORS.slate600}
               />
               <Text style={styles.vehicleText}>
-                {trip.vehicle.type.charAt(0).toUpperCase() + trip.vehicle.type.slice(1)}
+                {/* FIX: optional chaining on vehicle.type to prevent crash on malformed data */}
+                {(trip.vehicle?.type ?? 'vehicle').charAt(0).toUpperCase() + (trip.vehicle?.type ?? 'vehicle').slice(1)}
               </Text>
-              {trip.vehicle.ac && <Text style={styles.acTag}>AC</Text>}
+              {trip.vehicle?.ac && <Text style={styles.acTag}>AC</Text>}
             </View>
             <Text style={styles.departureTime}>{trip.departureTime}</Text>
           </View>

@@ -54,7 +54,8 @@ const NotificationItem = memo(function NotificationItem({
   notification: n,
   onPress,
 }: NotificationItemProps) {
-  const cfg = TYPE_CONFIG[n.type];
+  // CRASH FIX: unknown notification types (e.g. new server-side types) return undefined — fallback prevents cfg.bg crash
+  const cfg = TYPE_CONFIG[n.type] ?? { name: 'notifications-outline' as const, bg: `${colors.secondary}1A`, color: colors.secondary };
 
   return (
     <TouchableOpacity

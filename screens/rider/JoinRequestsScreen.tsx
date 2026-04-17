@@ -335,7 +335,8 @@ export default function JoinRequestsScreen() {
 
       {/* ── List ── */}
       <FlatList
-        data={filteredRequests}
+        // FIX: added ?? [] guard — undefined data crashes FlatList
+        data={filteredRequests ?? []}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         getItemLayout={getItemLayout}

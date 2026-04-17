@@ -10,12 +10,14 @@ export function useOTPTimer(initial = 60) {
   const [timeLeft, setTimeLeft] = useState(initial);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const clear = () => {
+  // FIX: clear was defined as a plain function inside hook — not stable across renders.
+  // Using useCallback+useRef ensures restart and useEffect cleanup always reference same fn.
+  const clear = useCallback(() => {
     if (intervalRef.current !== null) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  };
+  }, []);
 
   const restart = useCallback(() => {
     clear();
@@ -23,19 +25,22 @@ export function useOTPTimer(initial = 60) {
     intervalRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          clear();
+          if (intervalRef.current !== null) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-  }, [initial]);
+  }, [initial, clear]);
 
-  // Start on mount
+  // Start on mount; clear interval on unmount to prevent memory leak
   useEffect(() => {
     restart();
-    return clear; // cleanup on unmount
-  }, [restart]);
+    return clear; // FIX: explicit cleanup prevents interval leaking on unmount
+  }, [restart, clear]);
 
   return {
     timeLeft,

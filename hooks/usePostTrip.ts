@@ -4,7 +4,7 @@
 // `tripType` to select the relevant sub-form and its validation rules.
 
 import * as ImagePicker from 'expo-image-picker';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { tripService } from '../services/trips';
 import type { Trip, TripItineraryDay, TripType, Vehicle } from '../types';
 
@@ -130,7 +130,9 @@ function validateFullTour(
     errors.seats = `Seats must be between 1 and ${maxSeats}.`;
 
   if (form.costPerPerson <= 0)
-    errors.costPerPerson = 'Cost must be greater than ₹0.';
+    errors.costPerPerson = 'Please enter a valid cost (minimum ₹1).';
+  else if (form.costPerPerson > 99999)
+    errors.costPerPerson = 'Cost cannot exceed ₹99,999.';
 
   return errors;
 }
@@ -142,7 +144,12 @@ function validateOneWay(
   const errors: FormErrors<OneWayForm> = {};
 
   if (!form.from.trim()) errors.from = 'From city is required.';
-  if (!form.to.trim()) errors.to = 'To city is required.';
+  if (!form.to.trim()) {
+    errors.to = 'To city is required.';
+  } else if (form.from.trim().toLowerCase() === form.to.trim().toLowerCase()) {
+    // FIX: starting point and destination cannot be the same city
+    errors.to = 'Starting point and destination cannot be the same.';
+  }
 
   if (!isoDateRegex.test(form.date))
     errors.date = 'Date must be YYYY-MM-DD.';
@@ -156,8 +163,11 @@ function validateOneWay(
   if (form.seats < 1 || form.seats > maxSeats)
     errors.seats = `Seats must be between 1 and ${maxSeats}.`;
 
+  // FIX: added cost max validation — was only checking > 0, not upper bound
   if (form.costPerPerson <= 0)
-    errors.costPerPerson = 'Cost must be greater than ₹0.';
+    errors.costPerPerson = 'Please enter a valid cost (minimum ₹1).';
+  else if (form.costPerPerson > 99999)
+    errors.costPerPerson = 'Cost cannot exceed ₹99,999.';
 
   return errors;
 }
@@ -251,6 +261,8 @@ export function usePostTrip<T extends TripType>(
   const [errors, setErrors] = useState<FormErrors<F>>({});
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // FIX: isSubmitting ref prevents double-submit on rapid button taps
+  const isSubmitting = useRef(false);
 
   // ── Generic field setter ──────────────────────────────────────────────────
 
@@ -375,8 +387,11 @@ export function usePostTrip<T extends TripType>(
   // ── Submit ────────────────────────────────────────────────────────────────
 
   const submit = useCallback(async (): Promise<Trip | null> => {
+    // FIX: isSubmitting guard prevents double-submit on rapid button taps
+    if (isSubmitting.current || loading) return null;
     if (!validateForm()) return null;
 
+    isSubmitting.current = true;
     setLoading(true);
     setSubmitError(null);
     try {
@@ -443,8 +458,10 @@ export function usePostTrip<T extends TripType>(
       return null;
     } finally {
       setLoading(false);
+      // FIX: always reset isSubmitting in finally so UI unlocks after error too
+      isSubmitting.current = false;
     }
-  }, [form, tripType, vehicle, validateForm]);
+  }, [form, tripType, vehicle, validateForm, loading]);
 
   // ── Seat max from vehicle ─────────────────────────────────────────────────
 

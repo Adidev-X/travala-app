@@ -65,10 +65,11 @@ const MyTripCard = memo<MyTripCardProps>(function MyTripCard({
   });
 
   return (
-    <TouchableOpacity
+    // CLICK FIX: outer TouchableOpacity wrapping inner TouchableOpacity buttons is a nested
+    // touchable — on Android only the outer fires, making inner buttons unreachable.
+    // Replaced outer touchable with View; the "View" inner button handles card navigation.
+    <View
       style={styles.card}
-      onPress={handlePress}
-      activeOpacity={0.82}
     >
       {/* ── Top row: route + status badge ── */}
       <View style={styles.topRow}>
@@ -140,7 +141,7 @@ const MyTripCard = memo<MyTripCardProps>(function MyTripCard({
           <Text style={styles.requestsBtnText}>Requests</Text>
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 });
 

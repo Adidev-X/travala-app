@@ -49,8 +49,9 @@ export function useRiderProfile(riderId: string): UseRiderProfileReturn {
 
         if (!cancelled && isMounted.current) {
           setProfile(profileData);
-          setTrips(tripsData);
-          setReviews(reviewsData);
+          // CRASH FIX: Array.isArray guards — API may return null/undefined on partial failures
+          setTrips(Array.isArray(tripsData) ? tripsData : []);
+          setReviews(Array.isArray(reviewsData) ? reviewsData : []);
         }
       } catch (err: unknown) {
         if (!cancelled && isMounted.current) {

@@ -325,7 +325,7 @@ const RiderDashboardScreen = React.memo(function RiderDashboardScreen() {
               </TouchableOpacity>
             </View>
             <FlatList
-              data={activeTrips}
+              data={activeTrips ?? []}
               renderItem={renderTrip}
               keyExtractor={keyExtractor}
               horizontal

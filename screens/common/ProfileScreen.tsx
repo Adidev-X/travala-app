@@ -4,7 +4,7 @@ import { fontSize, fontWeight } from '@/constants/typography';
 import { useAuthStore } from '@/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Alert,
   ScrollView,
@@ -27,7 +27,9 @@ export default function ProfileScreen() {
   const user = useAuthStore(s => s.user);
   const logout = useAuthStore(s => s.logout);
 
-  const handleLogout = () => {
+  // CLICK FIX: wrap in useCallback — handler closes over logout and router;
+  // without it MENU_ITEMS cannot be memoized (stale reference on every render)
+  const handleLogout = useCallback(() => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -39,9 +41,10 @@ export default function ProfileScreen() {
         },
       },
     ]);
-  };
+  }, [logout, router]);
 
-  const MENU_ITEMS: MenuItem[] = [
+  // CLICK FIX: memoize MENU_ITEMS so list items don't re-create handlers on every render
+  const MENU_ITEMS: MenuItem[] = useMemo(() => [
     {
       icon: 'person-outline',
       label: 'Edit Profile',
@@ -52,7 +55,7 @@ export default function ProfileScreen() {
     { icon: 'settings-outline', label: 'Settings', route: '/settings' },
     { icon: 'help-circle-outline', label: 'Help & Support', route: '/help' },
     { icon: 'log-out-outline', label: 'Logout', onPress: handleLogout, danger: true },
-  ];
+  ], [router, handleLogout]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>

@@ -35,7 +35,8 @@ function useTrips(options: UseTripsOptions = {}) {
     async (query: UseTripsOptions) => {
       try {
         const result = await tripService.searchTrips(query);
-        setTrips(result);
+        // FIX: Array.isArray guard — API might return non-array on network error
+        setTrips(Array.isArray(result) ? result : []);
       } catch {
         // error surfaced via useFetch
       }

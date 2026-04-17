@@ -172,7 +172,8 @@ export default function TravelerBookingsScreen() {
         </View>
       ) : (
         <FlatList
-          data={filtered}
+          // FIX: added ?? [] guard — undefined data crashes FlatList
+          data={filtered ?? []}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.list}

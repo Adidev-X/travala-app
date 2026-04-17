@@ -4,7 +4,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import {
     ActivityIndicator,
     Platform,
@@ -118,13 +118,33 @@ export default function ContactRiderScreen() {
   const isDuplicate = requestState === 'duplicate';
   const isSendDisabled = isSent || isDuplicate || requestState === 'loading' || checkingRequest;
 
+  // VALIDATION ADDED: errors Record state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // VALIDATION ADDED: validateForm returns errors Record
+  const validateForm = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
+    if (!message.trim()) {
+      errs.message = 'Please write a message before sending';
+    }
+    return errs;
+  };
+
+  const handleSendRequest = () => {
+    // VALIDATION ADDED: validate before API call
+    const errs = validateForm();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+    sendRequest();
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <View style={ss.root}>
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <View style={ss.header}>
-        <TouchableOpacity onPress={() => router.back()} style={ss.backBtn} hitSlop={8}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} style={ss.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
         </TouchableOpacity>
         <Text style={ss.headerTitle}>Contact Rider</Text>
@@ -233,11 +253,13 @@ export default function ContactRiderScreen() {
           ) : (
             <>
               <TextInput
-                style={ss.textarea}
+                // VALIDATION ADDED: red border on error
+                style={[ss.textarea, errors.message ? { borderColor: colors.danger } : null]}
                 placeholder={`Hi, I am interested in joining your trip from ${tripFrom} to ${tripTo} on ${tripDate}...`}
                 placeholderTextColor={colors.text.hint}
                 value={message}
-                onChangeText={setMessage}
+                // VALIDATION ADDED: clear field error on change
+                onChangeText={v => { setMessage(v); setErrors(prev => ({ ...prev, message: '' })); }}
                 multiline
                 numberOfLines={4}
                 maxLength={300}
@@ -245,6 +267,8 @@ export default function ContactRiderScreen() {
                 editable={!isSendDisabled}
               />
               <Text style={ss.charCount}>{message.length}/300</Text>
+              {/* VALIDATION ADDED: inline error display */}
+              {errors.message ? <Text style={ss.errorText}>{errors.message}</Text> : null}
 
               {requestError !== null && (
                 <View style={ss.errorBox}>
@@ -255,7 +279,8 @@ export default function ContactRiderScreen() {
 
               <TouchableOpacity
                 style={[ss.sendBtn, isSendDisabled && ss.sendBtnDisabled]}
-                onPress={sendRequest}
+                // VALIDATION ADDED: use handleSendRequest (validates before sending)
+                onPress={handleSendRequest}
                 disabled={isSendDisabled}
                 activeOpacity={0.8}
               >
@@ -468,11 +493,12 @@ const ss = StyleSheet.create({
     padding: spacing.sm,
     marginBottom: spacing.sm,
   },
+  // VALIDATION ADDED: errorText style per spec (overrides inline errorText)
   errorText: {
-    fontSize: fontSize.sm,
+    fontSize: 12,
     color: colors.danger,
-    marginLeft: 6,
-    flex: 1,
+    marginTop: 4,
+    marginLeft: 4,
   },
   sendBtn: {
     flexDirection: 'row',

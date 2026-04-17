@@ -21,15 +21,57 @@ export default function SearchScreen() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [date, setDate] = useState('');
+  // VALIDATION ADDED: errors Record state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [searchTriggered, setSearchTriggered] = useState(false);
 
-  const debouncedFrom = useDebounce(from, 500);
-  const debouncedTo = useDebounce(to, 500);
+  const debouncedFrom = useDebounce(searchTriggered ? from : '', 500);
+  const debouncedTo = useDebounce(searchTriggered ? to : '', 500);
+  const debouncedDate = useDebounce(searchTriggered ? date : '', 500);
 
   const { trips, loading, error } = useTrips({
     from: debouncedFrom,
     to: debouncedTo,
-    date,
+    date: debouncedDate,
   });
+
+  // VALIDATION ADDED: validateForm returns errors Record
+  const validateForm = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
+
+    // From/To: required, cannot be same
+    if (!from.trim()) {
+      errs.from = 'Start and destination must be different';
+    }
+    if (!to.trim()) {
+      errs.to = 'Start and destination must be different';
+    } else if (from.trim().toLowerCase() === to.trim().toLowerCase()) {
+      errs.to = 'Start and destination must be different';
+    }
+
+    // Date: optional — if provided, cannot be past
+    if (date.trim()) {
+      const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!isoRegex.test(date)) {
+        errs.date = 'Date cannot be in the past';
+      } else {
+        const d = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (d < today) errs.date = 'Date cannot be in the past';
+      }
+    }
+
+    return errs;
+  };
+
+  const handleSearch = () => {
+    // VALIDATION ADDED: validate before triggering search
+    const errs = validateForm();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+    setSearchTriggered(true);
+  };
 
   const renderItem = ({ item }: { item: Trip }) => (
     <TouchableOpacity style={styles.card} activeOpacity={0.8}>
@@ -51,26 +93,41 @@ export default function SearchScreen() {
     <View style={styles.container}>
       <View style={styles.searchBar}>
         <TextInput
-          style={styles.input}
+          // VALIDATION ADDED: red border on error
+          style={[styles.input, errors.from ? { borderColor: colors.danger } : null]}
           placeholder="From city"
           placeholderTextColor={colors.text.hint}
           value={from}
-          onChangeText={setFrom}
+          // VALIDATION ADDED: clear field error on change
+          onChangeText={v => { setFrom(v); setErrors(prev => ({ ...prev, from: '', to: '' })); setSearchTriggered(false); }}
         />
+        {/* VALIDATION ADDED: inline error display */}
+        {errors.from ? <Text style={styles.errorText}>{errors.from}</Text> : null}
+
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors.to ? { borderColor: colors.danger } : null]}
           placeholder="To city"
           placeholderTextColor={colors.text.hint}
           value={to}
-          onChangeText={setTo}
+          onChangeText={v => { setTo(v); setErrors(prev => ({ ...prev, to: '' })); setSearchTriggered(false); }}
         />
+        {errors.to ? <Text style={styles.errorText}>{errors.to}</Text> : null}
+
         <TextInput
-          style={styles.input}
+          style={[styles.input, errors.date ? { borderColor: colors.danger } : null]}
           placeholder="Date (YYYY-MM-DD)"
           placeholderTextColor={colors.text.hint}
           value={date}
-          onChangeText={setDate}
+          onChangeText={v => { setDate(v); setErrors(prev => ({ ...prev, date: '' })); setSearchTriggered(false); }}
+          keyboardType="numbers-and-punctuation"
+          maxLength={10}
         />
+        {errors.date ? <Text style={styles.errorText}>{errors.date}</Text> : null}
+
+        {/* VALIDATION ADDED: Search button triggers validateForm */}
+        <TouchableOpacity style={styles.searchBtn} onPress={handleSearch} activeOpacity={0.8}>
+          <Text style={styles.searchBtnText}>Search Trips</Text>
+        </TouchableOpacity>
       </View>
 
       {loading && <ActivityIndicator color={colors.primary} style={styles.loader} />}
@@ -110,8 +167,18 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     backgroundColor: colors.background,
   },
+  // VALIDATION ADDED: errorText style per spec
+  errorText: { fontSize: 12, color: colors.danger, marginTop: 4, marginLeft: 4 },
+  // VALIDATION ADDED: search button
+  searchBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    marginTop: spacing.xs,
+  },
+  searchBtnText: { color: colors.white, fontSize: fontSize.md, fontWeight: fontWeight.semiBold },
   loader: { margin: spacing.lg },
-  errorText: { color: colors.danger, textAlign: 'center', margin: spacing.md },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: spacing.xxl },
   emptyText: { color: colors.text.hint, fontSize: fontSize.md },
   card: {

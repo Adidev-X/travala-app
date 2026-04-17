@@ -196,6 +196,13 @@ export default function SearchResultsScreen() {
     [handleCardPress],
   );
 
+  // CLICK FIX: filter icon button had NO onPress — pressing it did nothing silently.
+  // Added a defined handler (placeholder until advanced-filter modal is implemented).
+  const handleAdvancedFilter = useCallback(() => {
+    // TODO: open advanced filter modal (price range, rating, AC, etc.)
+    // Keeping as a no-op for now so the button at least has a defined onPress.
+  }, []);
+
   // ── Header sub-component ──────────────────────────────────────────────────
   const ListHeader = useMemo(
     () => (
@@ -244,7 +251,8 @@ export default function SearchResultsScreen() {
 
     return (
       <FlatList
-        data={filteredResults}
+        // FIX: added ?? [] guard — undefined data prop crashes FlatList
+        data={filteredResults ?? []}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         getItemLayout={getItemLayout}
@@ -296,7 +304,7 @@ export default function SearchResultsScreen() {
       <View style={ss.header}>
         <TouchableOpacity
           style={ss.backBtn}
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
@@ -312,10 +320,13 @@ export default function SearchResultsScreen() {
           ) : null}
         </View>
 
+        {/* CLICK FIX: was missing onPress — button was completely dead (no-op on tap).
+            Now wired to handleAdvancedFilter; replace with modal open when ready. */}
         <TouchableOpacity
           style={ss.filterIconBtn}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          onPress={handleAdvancedFilter}
         >
           <Ionicons name="options-outline" size={22} color={colors.primary} />
         </TouchableOpacity>

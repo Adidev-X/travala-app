@@ -20,7 +20,8 @@ export function useNotifications() {
     setLoading(true);
     try {
       const data = await notificationService.getAll();
-      setNotifications(data);
+      // FIX: Array.isArray guard — API might return non-array on error
+      setNotifications(Array.isArray(data) ? data : []);
     } catch {
       // silently fail — offline / no notifications
     } finally {

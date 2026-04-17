@@ -3,7 +3,7 @@
 // Fully self-contained — no external state.
 
 import { Ionicons } from '@expo/vector-icons';
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -56,15 +56,19 @@ export const TripResultCard = memo(function TripResultCard({
   onPress,
 }: TripResultCardProps) {
   const seatsLow = trip.seatsLeft <= 2;
-  const verifiedRC = trip.vehicle.rcVerified;
-  const verifiedDL = trip.vehicle.dlVerified;
-  const vehicleIcon = VEHICLE_ICON[trip.vehicle.type] ?? 'car-outline';
+  // FIX: optional chaining — vehicle may be undefined in malformed API responses
+  const verifiedRC = trip.vehicle?.rcVerified ?? false;
+  const verifiedDL = trip.vehicle?.dlVerified ?? false;
+  const vehicleIcon = VEHICLE_ICON[trip.vehicle?.type ?? 'car'] ?? 'car-outline';
+
+  // CLICK FIX: memoize handler to avoid new function reference on every render
+  const handlePress = useCallback(() => onPress(trip), [onPress, trip]);
 
   return (
     <TouchableOpacity
       style={cs.card}
       activeOpacity={0.82}
-      onPress={() => onPress(trip)}
+      onPress={handlePress}
     >
       {/* ── Type badge ── */}
       <View style={cs.topRow}>
@@ -73,7 +77,8 @@ export const TripResultCard = memo(function TripResultCard({
             {TYPE_LABEL[trip.type] ?? trip.type}
           </Text>
         </View>
-        {trip.vehicle.ac && (
+        {/* FIX: optional chaining on vehicle.ac — vehicle may be undefined */}
+        {trip.vehicle?.ac && (
           <View style={cs.acBadge}>
             <Ionicons name="snow-outline" size={11} color={colors.secondary} />
             <Text style={cs.acText}>AC</Text>
@@ -143,10 +148,11 @@ export const TripResultCard = memo(function TripResultCard({
         </View>
 
         {/* Stops */}
-        {trip.stops.length > 0 && (
+        {/* CRASH FIX: stops may be undefined/null from API — optional chaining prevents length crash */}
+        {(trip.stops?.length ?? 0) > 0 && (
           <View style={cs.metaChip}>
             <Ionicons name="location-outline" size={12} color={colors.text.hint} />
-            <Text style={cs.metaText}>{trip.stops.length} stop{trip.stops.length > 1 ? 's' : ''}</Text>
+            <Text style={cs.metaText}>{trip.stops?.length} stop{(trip.stops?.length ?? 0) > 1 ? 's' : ''}</Text>
           </View>
         )}
 
@@ -160,10 +166,13 @@ export const TripResultCard = memo(function TripResultCard({
       </View>
 
       {/* ── View Details button ── */}
-      <TouchableOpacity style={cs.viewBtn} onPress={() => onPress(trip)} activeOpacity={0.8}>
+      {/* CLICK FIX: was TouchableOpacity nested inside outer TouchableOpacity card — nested
+          touchables break on Android (only outer fires). Replace with View since the outer
+          card already handles the press. */}
+      <View style={cs.viewBtn}>
         <Text style={cs.viewBtnText}>View Details</Text>
         <Ionicons name="arrow-forward" size={14} color={colors.primary} />
-      </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 });

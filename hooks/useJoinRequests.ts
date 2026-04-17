@@ -63,7 +63,11 @@ export function useJoinRequests(tripId: string): UseJoinRequestsReturn {
     isRefresh ? setRefreshing(true) : setLoading(true);
     try {
       const data = await requestService.getByTrip(tripId);
-      if (isMounted.current) setRequests(data);
+      // CRASH FIX: Array.isArray guard — API may return null/undefined on error states
+      if (isMounted.current) setRequests(Array.isArray(data) ? data : []);
+    } catch {
+      // CRASH FIX: missing catch block — unhandled rejection crashed the component tree
+      if (isMounted.current) setRequests([]);
     } finally {
       if (isMounted.current) {
         setLoading(false);

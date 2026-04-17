@@ -2,7 +2,7 @@ import colors from '@/constants/colors';
 import spacing from '@/constants/spacing';
 import { fontSize, fontWeight } from '@/constants/typography';
 import { Ionicons } from '@expo/vector-icons';
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import {
     ActivityIndicator,
     StyleSheet,
@@ -43,12 +43,16 @@ const AppButton = memo(function AppButton({
 }: AppButtonProps) {
   const v = VARIANT_STYLES[variant];
   const isDisabled = disabled || loading;
+  // CLICK FIX: memoize the press handler so it doesn't recreate on every render
+  const handlePress = useCallback(() => { onPress?.(); }, [onPress]);
 
   return (
     <TouchableOpacity
-      onPress={onPress}
+      // CLICK FIX: guard onPress so it is never called while disabled or loading
+      onPress={isDisabled ? undefined : handlePress}
       disabled={isDisabled}
-      activeOpacity={0.8}
+      // CLICK FIX: no opacity feedback when disabled — prevents visual confusion
+      activeOpacity={isDisabled ? 1 : 0.8}
       style={[
         styles.base,
         { backgroundColor: v.bg, borderColor: v.border },

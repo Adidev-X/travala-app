@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,9 @@ export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const { user, logout } = useAuthStore();
 
-  const handleLogout = () => {
+  // CLICK FIX: wrap in useCallback — handler uses logout from store;
+  // without it a new function is created on every render, breaking memo children
+  const handleLogout = useCallback(() => {
     Alert.alert('Log Out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -28,12 +30,13 @@ export default function SettingsScreen() {
           try {
             await authService.logout();
           } finally {
-            logout();
+            // FIX: logout() returns a Promise — must await to ensure AsyncStorage is cleared before navigation
+            await logout();
           }
         },
       },
     ]);
-  };
+  }, [logout]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

@@ -20,6 +20,8 @@ export interface ProfileErrors {
   name?: string;
   city?: string;
   whatsapp?: string;
+  // FIX: added role error field — was missing, role validation never surfaced
+  role?: string;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -55,14 +57,24 @@ export function useProfileSetup(initialPhone = '') {
   const validate = useCallback((): boolean => {
     const newErrors: ProfileErrors = {};
 
+    // FIX: was missing letters-only check — allowed numbers and symbols in name
     if (!form.name.trim() || form.name.trim().length < 2) {
       newErrors.name = 'Name must be at least 2 characters.';
+    } else if (!/^[a-zA-Z\s]{2,50}$/.test(form.name.trim())) {
+      newErrors.name = 'Please enter a valid name (letters only, 2–50 characters).';
     }
+
     if (!form.city.trim()) {
-      newErrors.city = 'City is required.';
+      newErrors.city = 'Please select your city.';
     }
+
     if (form.whatsapp && !/^[6-9]\d{9}$/.test(form.whatsapp.replace(/\D/g, ''))) {
       newErrors.whatsapp = 'Enter a valid 10-digit WhatsApp number.';
+    }
+
+    // FIX: added role validation — user must select at least one role
+    if (!form.role) {
+      newErrors.role = 'Please select your role to continue.';
     }
 
     setErrors(newErrors);

@@ -52,7 +52,8 @@ function sortTrips(trips: Trip[], sort: SortOption): Trip[] {
   switch (sort) {
     case 'soonest':
       return arr.sort((a, b) => {
-        const dateCmp = a.startDate.localeCompare(b.startDate);
+        // CRASH FIX: startDate may be undefined — optional chaining + fallback prevents localeCompare crash
+        const dateCmp = (a.startDate ?? '').localeCompare(b.startDate ?? '');
         if (dateCmp !== 0) return dateCmp;
         return parseTime(a.departureTime) - parseTime(b.departureTime);
       });
@@ -61,8 +62,9 @@ function sortTrips(trips: Trip[], sort: SortOption): Trip[] {
     case 'rating': {
       // Score: RC+DL verified = 2pts, seats fill ratio (fuller = popular)
       const score = (t: Trip) =>
-        (t.vehicle.rcVerified ? 1 : 0) +
-        (t.vehicle.dlVerified ? 1 : 0) +
+        // CRASH FIX: vehicle may be undefined in malformed API responses
+        (t.vehicle?.rcVerified ? 1 : 0) +
+        (t.vehicle?.dlVerified ? 1 : 0) +
         (t.seats > 0 ? (t.seats - t.seatsLeft) / t.seats : 0);
       return arr.sort((a, b) => score(b) - score(a));
     }
@@ -98,7 +100,8 @@ export function useSearchResults(query: SearchQuery): UseSearchResultsReturn {
         seats: query.seats,
         vehicleType: query.vehicleType,
       });
-      if (isMounted.current) setResults(data);
+      // FIX: Array.isArray guard — API might return undefined/null on error states
+      if (isMounted.current) setResults(Array.isArray(data) ? data : []);
     } catch {
       if (isMounted.current) setError('Could not load rides. Check your connection.');
     } finally {
