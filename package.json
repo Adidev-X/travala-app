@@ -44,13 +44,5 @@
     "babel-preset-expo": "~55.0.8",
     "typescript": "~5.9.2"
   },
-  "overrides": {
-    "@xmldom/xmldom": "^0.9.10",
-    "postcss": "^8.5.12",
-    "semver": "^7.7.4",
-    "send": "^1.2.1",
-    "tar": "^7.5.13",
-    "uuid": "^14.0.0"
-  },
   "private": true
 }
